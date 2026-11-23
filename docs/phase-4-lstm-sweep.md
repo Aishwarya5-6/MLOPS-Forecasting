@@ -22,7 +22,7 @@ A third model type, and one systematic hyperparameter sweep.
 | Plan task | Status | Notes |
 | --- | --- | --- |
 | LSTM: sliding windows, 1–2 layers, early stopping, fixed seed | ✅ | `src/models/lstm.py`, `configs/lstm.yaml` |
-| Same pyfunc interface, logged through `log_run()` | ✅ | 3 runs logged with model artifacts |
+| Same pyfunc interface, logged through `log_run()` | ✅ | 3 runs logged with model artifacts (rerun cleanly, see [Problems](#problems-hit-and-fixes)) |
 | Extend `log_run()` to mirror to W&B | ⛔ Skipped | W&B blocked; I didn't add code that can't be tested |
 | Check one run looks the same in MLflow and W&B | ⛔ Skipped | same reason |
 | Sweep spec: Bayesian, minimise RMSE, 4–6 hyperparameters | ✅ | `sweeps/xgb.yaml`: TPE, 6 parameters |
@@ -72,7 +72,8 @@ The tuned model wins 4 of 5 folds. The LSTM is worst overall but **best in winte
 
 - **The LSTM beats the baseline by about 15% but trails XGBoost and SARIMA by about 6%.** That's normal for a small dataset with strong, simple seasonality, where hand-built features (same hour yesterday, rolling means) do much of the work an LSTM would have to learn.
 - **The variants barely differ** (8.78–8.82). Neither a second layer nor a 14-day window changed much, so the plan's advice to time-box LSTM tuning applies.
-- **Speed:** about 48 s per fold on CPU (about 4 min per run), against 2 s per fold for XGBoost. A sweep over the LSTM would take hours, which is why the sweep is on XGBoost.
+- **Speed (clean reruns):** 221 s for 1 layer with a 7-day window, 472 s for 2 layers, 465 s for a 14-day window. That's about 45–95 s per fold, against 2 s per fold for XGBoost. A sweep over the LSTM would take hours, which is why the sweep is on XGBoost.
+- **Reproducible:** each LSTM config was run twice, on different days' commits and with the laptop sleeping during one set. Every metric matched to 6 decimal places, fold by fold. This is the first hard evidence for success criterion #1 (same code + data + seed gives the same result).
 
 ## Sweep
 
@@ -143,8 +144,19 @@ python -m src.sweep sweeps/xgb.yaml [--trials 40]
    **Fix:** the LSTM tests run in a **fresh Python process** (`tests/test_lstm.py` uses `subprocess`). Real runs are unaffected: `train.py`, the sweep and each saved pyfunc load only one model type per process.
 
    **Keep in mind for Part 3:** a single API process must never load an XGBoost and an LSTM model together. One serving process should serve one model type.
-2. **The laptop slept during LSTM runs.** Two runs show wall times of 6,918 s and 3,776 s even though they used about 15 minutes of CPU. The RMSE values are unaffected; only `eval_seconds` is wrong. Those runs carry an MLflow `note` tag. **Fix:** long jobs now run under **`caffeinate -i`** (macOS: prevents idle sleep), e.g. `caffeinate -i python -m src.sweep sweeps/xgb.yaml`.
-3. **LSTM runs are tagged `git_dirty=true`.** I was editing the sweep code while they trained, and `log_run()` checks git at the *end* of a run. The LSTM code they ran is in the tagged commit, and a `note` tag says so. **Lesson:** don't edit tracked files while a run is in progress, or commit first and make changes on a branch.
+2. **The laptop slept during the first LSTM runs.** Two of them showed wall times of 6,918 s and 3,776 s, although they used only about 15 minutes of CPU. Only `eval_seconds` was affected, not the metrics. **Fix:** long jobs now run under **`caffeinate -i`**, a macOS command that prevents idle sleep (e.g. `caffeinate -i python -m src.sweep sweeps/xgb.yaml`).
+3. **The first LSTM runs were tagged `git_dirty=true`.** I was editing sweep files while they trained, and `log_run()` checks git at the *end* of a run. Their LSTM code was in the tagged commit, so the results were valid, but the record wasn't clean.
+   - **Resolution:** all 3 were **rerun from a clean commit (`9ece807`) under `caffeinate`**.
+   - The reruns are `git_dirty=false`, with realistic times, and their metrics are **identical to 6 decimal places**.
+   - The old runs are tagged `stage=superseded` and `superseded_by=<new run id>`. The new runs are tagged `reproduces=<old run id>`. The old runs were kept, not deleted, so the history stays complete.
+
+   | Config | Original run | Clean rerun | RMSE (both) |
+   | --- | --- | --- | --- |
+   | 1 layer, 7-day window | `37d2407c` | `d9145ff6` | 8.824108 |
+   | 2 layers, 7-day window | `a6128a2d` | `9fcaaa80` | 8.781359 |
+   | 1 layer, 14-day window | `0710cadf` | `ff6a39f7` | 8.814436 |
+
+   **Lesson:** don't edit tracked files while a run is in progress. Commit first, or work on a branch.
 4. **`timeout` isn't available on macOS.** Used `perl -e 'alarm N; exec @ARGV' <cmd>` to cap test runs.
 5. **Cosmetic:** matplotlib warns that the Optuna slice plot "includes Axes not compatible with tight_layout", and its colourbar slightly overlaps the last panel. It's readable, so I left it alone.
 
@@ -171,10 +183,10 @@ Tests: **37 pass**.
 
 | What | Count |
 | --- | --- |
-| Experiment `forecasting-hyd-pm25` runs | 12 (Phase 3) + 3 LSTM + 1 tuned XGB + 1 sweep parent + 40 trials = **57** |
+| Experiment `forecasting-hyd-pm25` runs | 12 (Phase 3) + 3 LSTM + 3 LSTM superseded + 1 tuned XGB + 1 sweep parent + 40 trials = **60** |
 | Registry `pm25-forecaster` | v1 = Phase 3 XGBoost, `@champion` (unchanged) |
 
-Tip: in the runs table, filter with `tags.stage = 'dev'` to hide the 40 sweep trials.
+Tip: in the runs table, filter with `tags.stage = 'dev'` to hide the 40 sweep trials and the 3 superseded LSTM runs.
 
 ## Everyday commands
 
