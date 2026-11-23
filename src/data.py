@@ -5,6 +5,8 @@ python -m src.data   (run by `dvc repro` as the `prepare` stage)
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import pandas as pd
 
 from src.config import ROOT, load_params
@@ -50,6 +52,91 @@ def clean(
     out["is_missing"] = filled.isna()
     out.index.name = "timestamp"
     return out
+
+
+# ---------------------------------------------------------------------------
+# Walk-forward splits
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Fold:
+    """One walk-forward split. Train is everything up to and including `train_end`.
+
+    The test window is [test_start, test_end]. Forecasts are made at each `origin`
+    for the `horizon` hours starting at that origin.
+    """
+
+    index: int
+    train_end: pd.Timestamp
+    test_start: pd.Timestamp
+    test_end: pd.Timestamp
+    origins: tuple[pd.Timestamp, ...]
+
+
+def _origins(start: pd.Timestamp, end: pd.Timestamp, horizon: int, every: int) -> tuple:
+    """Forecast origins in [start, end] whose full horizon still fits inside the window."""
+    last = end - pd.Timedelta(hours=horizon - 1)
+    return tuple(pd.date_range(start, last, freq=f"{every}h"))
+
+
+def make_folds(
+    index: pd.DatetimeIndex,
+    horizon: int,
+    n_folds: int,
+    test_hours: int,
+    step_hours: int,
+    holdout_hours: int,
+    origin_every: int,
+) -> tuple[list[Fold], Fold]:
+    """Expanding-window folds plus a final holdout window.
+
+    - The holdout covers roughly the last `holdout_hours`, starting at midnight. It is
+      returned separately and used only by promote.py, never for tuning.
+    - Fold k's test window starts at holdout_start - (n_folds - k) * step_hours, so the folds
+      end just before the holdout and are spread out to cover different seasons.
+    - Training data for each fold is everything before its test window (expanding window).
+    """
+    if test_hours > step_hours:
+        raise ValueError("fold_test_hours must be <= fold_step_hours so test windows don't overlap")
+    hour = pd.Timedelta(hours=1)
+    holdout_start = (index[-holdout_hours]).ceil("D")
+    holdout = Fold(
+        index=-1,
+        train_end=holdout_start - hour,
+        test_start=holdout_start,
+        test_end=index[-1],
+        origins=_origins(holdout_start, index[-1], horizon, origin_every),
+    )
+    folds = []
+    for k in range(n_folds):
+        start = holdout_start - pd.Timedelta(hours=(n_folds - k) * step_hours)
+        end = start + pd.Timedelta(hours=test_hours) - hour
+        if start - hour < index[0]:
+            raise ValueError(f"Fold {k} would start before the data does; use fewer folds")
+        folds.append(
+            Fold(
+                index=k,
+                train_end=start - hour,
+                test_start=start,
+                test_end=end,
+                origins=_origins(start, end, horizon, origin_every),
+            )
+        )
+    return folds, holdout
+
+
+def folds_from_params(index: pd.DatetimeIndex, params: dict | None = None):
+    f = (params or load_params())["forecast"]
+    return make_folds(
+        index,
+        horizon=f["horizon"],
+        n_folds=f["n_folds"],
+        test_hours=f["fold_test_hours"],
+        step_hours=f["fold_step_hours"],
+        holdout_hours=f["holdout_hours"],
+        origin_every=f["origin_every_hours"],
+    )
 
 
 def main() -> None:

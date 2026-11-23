@@ -24,5 +24,8 @@ featurize:
 forecast:
   horizon: 24              # predict the next 24 hours
   seasonal_period: 24      # daily cycle, used by seasonal-naive and SARIMA
-  n_folds: 5               # walk-forward folds (Phase 2)
-  holdout_hours: 720       # last 30 days kept aside for promote.py (Phase 5)
+  holdout_hours: 720       # last ~30 days kept aside for promote.py (Phase 5); starts at midnight
+  n_folds: 5               # walk-forward folds, expanding training window
+  fold_test_hours: 720     # each fold is scored on a 30-day test window...
+  fold_step_hours: 1752    # ...and folds start 73 days apart, so 5 folds cover a full year of seasons
+  origin_every_hours: 24   # inside a test window, forecast the next 24 h every day at midnight

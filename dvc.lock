@@ -13,8 +13,8 @@ stages:
       size: 346
     - path: src/data.py
       hash: md5
-      md5: fdaf3b9e12b12e81c12449fa5e33df20
-      size: 2607
+      md5: f8cb0bc4d3963c5f65eeffc1fdcb6cac
+      size: 5656
     params:
       params.yaml:
         data.timezone: Asia/Kolkata
@@ -60,3 +60,45 @@ stages:
       hash: md5
       md5: 26e8044c18d0830ad16cff8231d19ef9
       size: 2410545
+  evaluate:
+    cmd: python -m src.evaluate
+    deps:
+    - path: data/processed/pm25_hourly.parquet
+      hash: md5
+      md5: 07cc1295de0c7c27da9ac21873de8486
+      size: 385210
+    - path: src/data.py
+      hash: md5
+      md5: f8cb0bc4d3963c5f65eeffc1fdcb6cac
+      size: 5656
+    - path: src/evaluate.py
+      hash: md5
+      md5: efa21d031280c733a8ca6830985cabfe
+      size: 4722
+    - path: src/models/base.py
+      hash: md5
+      md5: e0d13604d74efa7723f8215b70ae7548
+      size: 799
+    - path: src/models/baseline.py
+      hash: md5
+      md5: d4283d21df00a5818b37f8b4e1882d4a
+      size: 1143
+    params:
+      params.yaml:
+        forecast:
+          horizon: 24
+          seasonal_period: 24
+          holdout_hours: 720
+          n_folds: 5
+          fold_test_hours: 720
+          fold_step_hours: 1752
+          origin_every_hours: 24
+    outs:
+    - path: reports/baseline_details.json
+      hash: md5
+      md5: b47e5d46c1f5a428cb35b98a551ce26f
+      size: 4732
+    - path: reports/metrics.json
+      hash: md5
+      md5: 4b0e6fb8e83491a91286161df6101967
+      size: 258

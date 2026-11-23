@@ -1,0 +1,17 @@
+{
+  "naive": {
+    "mae": 10.874,
+    "rmse": 14.423,
+    "smape": 36.368
+  },
+  "seasonal_naive_24": {
+    "mae": 7.815,
+    "rmse": 10.362,
+    "smape": 29.122
+  },
+  "seasonal_naive_168": {
+    "mae": 12.912,
+    "rmse": 17.052,
+    "smape": 43.914
+  }
+}
