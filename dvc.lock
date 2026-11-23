@@ -1,0 +1,62 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: python -m src.data
+    deps:
+    - path: data/raw/pm25_raw.csv
+      hash: md5
+      md5: 4f244f3ce028bc4dccb29c9fd9116c60
+      size: 974965
+    - path: src/config.py
+      hash: md5
+      md5: 3fc8adb75d30f0625ea7a81bff0faa63
+      size: 346
+    - path: src/data.py
+      hash: md5
+      md5: fdaf3b9e12b12e81c12449fa5e33df20
+      size: 2607
+    params:
+      params.yaml:
+        data.timezone: Asia/Kolkata
+        prepare:
+          freq: h
+          min_value: 0.0
+          max_value: 999.0
+          max_gap_hours: 6
+    outs:
+    - path: data/processed/pm25_hourly.parquet
+      hash: md5
+      md5: 07cc1295de0c7c27da9ac21873de8486
+      size: 385210
+  featurize:
+    cmd: python -m src.features
+    deps:
+    - path: data/processed/pm25_hourly.parquet
+      hash: md5
+      md5: 07cc1295de0c7c27da9ac21873de8486
+      size: 385210
+    - path: src/features.py
+      hash: md5
+      md5: 7347d4002506e044cfec2e19af664d54
+      size: 2032
+    params:
+      params.yaml:
+        featurize:
+          lags:
+          - 1
+          - 2
+          - 3
+          - 6
+          - 12
+          - 24
+          - 48
+          - 168
+          rolling_windows:
+          - 6
+          - 24
+          - 168
+    outs:
+    - path: data/processed/features.parquet
+      hash: md5
+      md5: 26e8044c18d0830ad16cff8231d19ef9
+      size: 2410545

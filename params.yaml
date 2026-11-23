@@ -1,0 +1,28 @@
+# Shared settings DVC watches. Change a value here -> `dvc repro` reruns only affected stages.
+seed: 42
+
+data:
+  source: open-meteo       # CAMS model estimates; swap to openaq-archive if station access works
+  latitude: 17.385         # Hyderabad city centre
+  longitude: 78.4867
+  start_date: "2022-08-01" # Open-Meteo PM2.5 history for India starts around here
+  location_id: null        # OpenAQ only: station ID
+  parameter: pm25          # OpenAQ only
+  raw_file: data/raw/pm25_raw.csv
+  timezone: Asia/Kolkata
+
+prepare:
+  freq: h                  # hourly series
+  min_value: 0.0           # readings <= this are invalid (PM2.5 can't be zero/negative)
+  max_value: 999.0         # readings above this are sensor errors
+  max_gap_hours: 6         # interpolate gaps up to this length; longer gaps stay missing
+
+featurize:
+  lags: [1, 2, 3, 6, 12, 24, 48, 168]   # hours (168 = same hour last week)
+  rolling_windows: [6, 24, 168]         # hours; computed from past values only
+
+forecast:
+  horizon: 24              # predict the next 24 hours
+  seasonal_period: 24      # daily cycle, used by seasonal-naive and SARIMA
+  n_folds: 5               # walk-forward folds (Phase 2)
+  holdout_hours: 720       # last 30 days kept aside for promote.py (Phase 5)

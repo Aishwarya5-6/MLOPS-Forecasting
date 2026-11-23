@@ -1,0 +1,22 @@
+stages:
+  prepare:
+    cmd: python -m src.data
+    deps:
+      - src/data.py
+      - src/config.py
+      - data/raw/pm25_raw.csv
+    params:
+      - data.timezone
+      - prepare
+    outs:
+      - data/processed/pm25_hourly.parquet
+
+  featurize:
+    cmd: python -m src.features
+    deps:
+      - src/features.py
+      - data/processed/pm25_hourly.parquet
+    params:
+      - featurize
+    outs:
+      - data/processed/features.parquet
