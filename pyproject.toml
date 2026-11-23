@@ -8,3 +8,4 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+filterwarnings = ["ignore:Add type hints to the `predict` method:UserWarning"]

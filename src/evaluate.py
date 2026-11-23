@@ -73,15 +73,23 @@ def forecast_fold(
     return np.array(actuals), np.array(forecasts)
 
 
-def evaluate(model: ForecastModel, y: pd.Series, folds: list[Fold], horizon: int) -> dict:
+def evaluate(
+    model: ForecastModel,
+    y: pd.Series,
+    folds: list[Fold],
+    horizon: int,
+    return_forecasts: bool = False,
+) -> dict:
     """Score a model on every fold.
 
     Returns {"folds": [...per-fold scores...], "mean": {...}, "rmse_by_horizon": [...]}.
     "mean" is the unweighted average over folds; this is the number used to compare models.
+    With return_forecasts=True, also returns "forecasts": [(fold, actual, pred), ...] for plots.
     """
-    per_fold, sq_err = [], []
+    per_fold, sq_err, forecasts = [], [], []
     for fold in folds:
         actual, pred = forecast_fold(model, y, fold, horizon)
+        forecasts.append((fold, actual, pred))
         per_fold.append(
             {
                 "fold": fold.index,
@@ -93,7 +101,10 @@ def evaluate(model: ForecastModel, y: pd.Series, folds: list[Fold], horizon: int
         sq_err.append((actual - pred) ** 2)
     mean = {m: float(np.mean([f[m] for f in per_fold])) for m in METRICS}
     rmse_by_h = np.sqrt(np.nanmean(np.concatenate(sq_err), axis=0))
-    return {"folds": per_fold, "mean": mean, "rmse_by_horizon": rmse_by_h.round(3).tolist()}
+    out = {"folds": per_fold, "mean": mean, "rmse_by_horizon": rmse_by_h.round(3).tolist()}
+    if return_forecasts:
+        out["forecasts"] = forecasts
+    return out
 
 
 def baseline_models(params: dict) -> list[ForecastModel]:

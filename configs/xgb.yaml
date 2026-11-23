@@ -1,0 +1,12 @@
+# Direct multi-horizon XGBoost: one model, `step` (1-24) is a feature.
+lags: [1, 2, 3, 6, 12, 24]      # values just before the forecast origin
+rolling_windows: [6, 24, 168]   # mean/std of the last w hours before the origin
+seasonal_lags: [24, 168]        # same hour yesterday / last week, for the target hour
+train_origin_every: 2           # build a training example from every 2nd hour
+log_target: false
+n_estimators: 400
+max_depth: 6
+learning_rate: 0.05
+subsample: 0.8
+colsample_bytree: 0.8
+min_child_weight: 1

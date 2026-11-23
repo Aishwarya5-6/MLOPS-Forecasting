@@ -1,0 +1,7 @@
+# SARIMA(p,d,q)(P,D,Q,s). EDA: stationary (d=0), strong 24 h season.
+order: [1, 0, 1]
+seasonal_order: [1, 0, 1, 24]
+trend: c
+train_days: 42       # fit on the last 6 weeks of each fold's training data
+history_days: 14     # at each forecast origin, filter the last 2 weeks (no refit)
+log_transform: true  # variance grows with level
