@@ -1,0 +1,24 @@
+# Best config from Optuna sweep 'xgb-tpe' (MLflow run 919b2c36950c468abc0f427b1c7f33ba)
+# trial 17: rmse=8.1493
+lags:
+- 1
+- 2
+- 3
+- 6
+- 12
+- 24
+rolling_windows:
+- 6
+- 24
+- 168
+seasonal_lags:
+- 24
+- 168
+train_origin_every: 2
+log_target: true
+n_estimators: 1000
+max_depth: 5
+learning_rate: 0.013094
+subsample: 0.693377
+colsample_bytree: 0.549277
+min_child_weight: 4.27663
