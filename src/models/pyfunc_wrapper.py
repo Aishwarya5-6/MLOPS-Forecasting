@@ -65,5 +65,7 @@ def log_pyfunc(model: ForecastModel, example: pd.DataFrame, tmp_dir: Path, horiz
         code_paths=[str(root)],
         signature=signature,
         input_example=example,
-        pip_requirements=[f"{p}=={version(p)}" for p in PIP_PACKAGES],
+        pip_requirements=[
+            f"{p}=={version(p)}" for p in PIP_PACKAGES + getattr(model, "extra_pip", [])
+        ],
     )

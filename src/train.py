@@ -79,6 +79,10 @@ def build_model(name: str, cfg: dict, params: dict):
         from src.models.xgb import XGBModel
 
         return XGBModel(horizon=horizon, seed=params["seed"], **cfg)
+    if name == "lstm":
+        from src.models.lstm import LSTMModel
+
+        return LSTMModel(horizon=horizon, seed=params["seed"], **cfg)
     raise NotImplementedError(f"Model '{name}' is added in a later phase.")
 
 

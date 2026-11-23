@@ -1,0 +1,11 @@
+# Direct multi-output LSTM: last `window` hours in, next 24 hours out.
+window: 168          # 7 days of hourly input
+hidden_size: 64
+num_layers: 1
+dropout: 0.1
+learning_rate: 0.001
+batch_size: 256
+max_epochs: 50
+patience: 5          # early stopping on the last 10% of training windows
+train_days: 730      # train on the last 2 years of each fold's training data
+train_stride: 2      # a training window starting every 2 hours
