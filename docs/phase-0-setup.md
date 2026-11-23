@@ -81,7 +81,7 @@ Created at runtime, all ignored by git: `mlflow.db` (SQLite tracking and registr
   - Loads `.env` with `python-dotenv`, so `MLFLOW_TRACKING_URI` comes from the environment rather than from code.
   - `--model dummy` logs one param (`learning_rate`), one metric (`rmse=1.0`) and the tags `model_type`, `stage`.
   - Every other model raises `NotImplementedError` until its phase.
-- **`.gitignore`:** excludes `.venv/`, `.env`, caches, everything inside `data/` (except `.gitkeep` and the `*.dvc` files needed in Phase 1), `mlruns/`, `mlartifacts/`, `mlflow.db`, `wandb/`, and model binaries (`*.pkl`, `*.joblib`, `*.onnx`, `*.pt`).
+- **`.gitignore`:** excludes `.venv/`, `.env`, caches, `mlruns/`, `mlartifacts/`, `mlflow.db`, `wandb/`, and model binaries (`*.pkl`, `*.joblib`, `*.onnx`, `*.pt`). *(Updated in Phase 1: data rules were removed from the root `.gitignore`; DVC now writes a `.gitignore` inside each data folder. See [phase-1-data.md](phase-1-data.md).)*
 - **`pyproject.toml`:**
   - ruff: line length 100, target py311, rules `E, F, I, UP, B`, `docs/` excluded (otherwise ruff tries to format code blocks in markdown).
   - pytest: `testpaths = ["tests"]`.
