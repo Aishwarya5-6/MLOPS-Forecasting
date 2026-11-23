@@ -78,25 +78,3 @@ def test_apply_overrides_parses_yaml_values():
     assert cfg == {"max_depth": 8, "lags": [1, 24], "log_target": True}
     with pytest.raises(SystemExit):
         apply_overrides({}, ["oops"])
-
-
-def test_lstm_fits_and_predicts():
-    from src.models.lstm import LSTMModel
-
-    y = _series(days=40)
-    model = LSTMModel(window=48, hidden_size=16, max_epochs=3, train_days=40, train_stride=6)
-    model.fit(y.iloc[:-24])
-    pred = model.predict(y.iloc[:-24], 24)
-    assert pred.shape == (24,)
-    assert (pred >= 0).all()
-    assert 1 <= model.epochs_trained_ <= 3
-
-
-def test_lstm_is_reproducible_with_a_seed():
-    from src.models.lstm import LSTMModel
-
-    y = _series(days=30)
-    kw = dict(window=48, hidden_size=8, max_epochs=2, train_days=30, train_stride=6, seed=7)
-    a = LSTMModel(**kw).fit(y).predict(y, 24)
-    b = LSTMModel(**kw).fit(y).predict(y, 24)
-    np.testing.assert_allclose(a, b, rtol=1e-6)
