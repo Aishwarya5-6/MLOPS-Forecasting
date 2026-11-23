@@ -1,0 +1,2 @@
+# Phase 0 connection test: no real model, just proves MLflow logging works.
+learning_rate: 0.1

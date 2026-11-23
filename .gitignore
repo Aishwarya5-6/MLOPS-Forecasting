@@ -1,0 +1,31 @@
+# Environment
+.venv/
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.DS_Store
+
+# Data (tracked by DVC, never git)
+data/*
+!data/raw/
+!data/processed/
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/raw/*.dvc
+
+# MLflow / W&B local state
+mlruns/
+mlartifacts/
+mlflow.db
+wandb/
+
+# Model binaries
+*.pkl
+*.joblib
+*.onnx
+*.pt
