@@ -34,9 +34,20 @@ def data_version() -> dict[str, str]:
     return {"data_version": raw, "prepared_data_version": prepared}
 
 
+def run_tags(model_type: str, stage: str) -> dict[str, str]:
+    commit, dirty = git_commit()
+    return {
+        "model_type": model_type,
+        "git_commit": commit,
+        "git_dirty": str(dirty).lower(),
+        "stage": stage,
+        **data_version(),
+    }
+
+
 def setup_mlflow() -> None:
     mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000"))
-    mlflow.set_experiment(EXPERIMENT_NAME)
+    mlflow.set_experiment(os.getenv("MLFLOW_EXPERIMENT_NAME", EXPERIMENT_NAME))
 
 
 def _flatten(d: dict, prefix: str = "") -> dict:
@@ -61,6 +72,7 @@ def log_run(
     files: list[Path] | None = None,
     log_model_fn=None,
     stage: str = "dev",
+    nested: bool = False,
 ) -> str:
     """Log one run and return its run ID.
 
@@ -70,20 +82,15 @@ def log_run(
     - figures: {"forecast_vs_actual.png": matplotlib Figure}
     - files: extra files to attach (configs, json)
     - log_model_fn: callable(tmp_dir) that logs the model inside the run
+    - nested: log as a child of the currently active run (used by sweeps)
     Tags always include model_type, git_commit, git_dirty, data_version, stage.
+
+    W&B mirroring (plan FR7) is not implemented: the W&B account is blocked, so MLflow is the
+    only tracker. Sweeps use Optuna instead (src/sweep.py).
     """
     setup_mlflow()
-    commit, dirty = git_commit()
-    with mlflow.start_run(run_name=run_name) as run:
-        mlflow.set_tags(
-            {
-                "model_type": model_type,
-                "git_commit": commit,
-                "git_dirty": str(dirty).lower(),
-                "stage": stage,
-                **data_version(),
-            }
-        )
+    with mlflow.start_run(run_name=run_name, nested=nested) as run:
+        mlflow.set_tags(run_tags(model_type, stage))
         mlflow.log_params({k: str(v) for k, v in _flatten(params).items()})
         mlflow.log_metrics(metrics)
         for name, values in (step_metrics or {}).items():

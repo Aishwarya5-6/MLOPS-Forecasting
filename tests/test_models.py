@@ -78,3 +78,25 @@ def test_apply_overrides_parses_yaml_values():
     assert cfg == {"max_depth": 8, "lags": [1, 24], "log_target": True}
     with pytest.raises(SystemExit):
         apply_overrides({}, ["oops"])
+
+
+def test_sweep_suggest_respects_search_space():
+    import optuna
+
+    from src.sweep import suggest
+
+    space = {
+        "max_depth": {"type": "int", "low": 3, "high": 5},
+        "lr": {"type": "float", "low": 0.01, "high": 0.3, "log": True},
+        "n": {"type": "int", "low": 100, "high": 300, "step": 100},
+        "flag": {"type": "categorical", "choices": [True, False]},
+    }
+    study = optuna.create_study(sampler=optuna.samplers.RandomSampler(seed=0))
+    for _ in range(20):
+        trial = study.ask()
+        v = {k: suggest(trial, k, s) for k, s in space.items()}
+        assert 3 <= v["max_depth"] <= 5
+        assert 0.01 <= v["lr"] <= 0.3
+        assert v["n"] in (100, 200, 300)
+        assert v["flag"] in (True, False)
+        study.tell(trial, 0.0)
