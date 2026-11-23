@@ -8,15 +8,7 @@ __pycache__/
 .ipynb_checkpoints/
 .DS_Store
 
-# Data (tracked by DVC, never git)
-data/*
-!data/raw/
-!data/processed/
-data/raw/*
-data/processed/*
-!data/raw/.gitkeep
-!data/processed/.gitkeep
-!data/raw/*.dvc
+# Data: DVC writes a .gitignore inside data/raw and data/processed for each file it tracks
 
 # MLflow / W&B local state
 mlruns/
