@@ -28,12 +28,14 @@ python -m src.download openmeteo --end 2026-11-22
 # 2. CPCB series: download city_hour.csv (CC0) from Kaggle into data/raw/station/
 #    https://www.kaggle.com/datasets/rohanrao/air-quality-data-in-india   (MD5 6d9c5b1a...)
 
-# 3. Check both files match the versions used, then rebuild everything
-dvc status data/raw/pm25_raw.csv.dvc data/raw/station/city_hour.csv.dvc   # should report no changes
+# 3. Rebuild everything
 dvc repro     # prepare -> forecast caches -> replays -> hypotheses -> paper/figures, tables, numbers.tex
+
+# 4. Check: no difference in dvc.lock means every input and output hash matches the paper's run
+git diff --stat dvc.lock
 ```
 
-`dvc repro` takes about 1.5 hours on a laptop CPU, almost all of it LSTM training. No MLflow server is needed: the few numbers taken from MLflow are stored in `reports/study/tracking_export.json`. Tree models, SARIMA and the baselines are deterministic; the seeded LSTM may differ slightly across hardware and thread counts.
+`dvc repro` takes about 1.5 hours on a laptop CPU, almost all of it LSTM training. No MLflow server is needed: the few numbers taken from MLflow are stored in `reports/study/tracking_export.json`. Tree models, SARIMA and the baselines are deterministic; the seeded LSTM may differ slightly across hardware and thread counts, which would show up as a changed `data/study/*` hash in `dvc.lock`.
 
 The LaTeX source is in [paper/](paper/). Every number in the text is a macro from the generated `paper/numbers.tex`. Set `\extendedtrue` / `\extendedfalse` at the top of `paper/main.tex` for the extended or the conference version.
 
