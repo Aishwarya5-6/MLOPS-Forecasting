@@ -118,3 +118,14 @@ Recorded **before any replay result was computed for any dataset**, and before a
   - Across datasets, each hypothesis is summarised as the number of datasets where it holds, using the per-dataset criteria above, plus a per-dataset table.
   - The primary results remain `cams` and `station` (Hyderabad).
 - **LSTM threads:** the Hyderabad `station` LSTM runs with 4 CPU threads (heat). Thread count can change floating-point summation order, so results are reproducible for the same thread setting.
+
+### D2 (27 Nov 2026): analysis details, recorded **after** the first replay results
+
+None of these changes a policy, metric, hypothesis criterion, dataset or candidate.
+
+1. **H2 interval.** H2's criterion needs a bootstrap CI for (DM − τ=2%) deployed RMSE. The first version of `replay.py` saved CIs only against `tau0` and `never`. I added `diff_vs_tau2_ci`, computed with the same paired week-block bootstrap and seed, and reran the replays. All other numbers were unchanged.
+2. **Control not counted.** `station_nolstm` re-uses the Hyderabad CPCB cache. D1 defined it as a like-for-like control, so it is reported but **not counted** in the H1–H3 totals; counting it would double-count Hyderabad. With it included, the counts would be H1 16/18, H2 6/18, H3 14/18. The conclusions are the same either way.
+3. **Figures.** An absolute deployed-RMSE figure was dropped, because its unpaired week-level intervals hid the paired differences. The paper shows paired differences against τ=0 instead. The harmful-swap panel shows counts rather than rates, because a rate is undefined when a policy makes no swaps.
+4. **Exploratory analyses**, labelled as such in the paper:
+   - the best single candidate kept all year, compared against every policy
+   - the gap between the oracle and the best policy

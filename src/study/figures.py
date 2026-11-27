@@ -179,6 +179,9 @@ def numbers_tex(results: dict, params: dict) -> str:
             vals[f"{k}/excess_pct"] = f"{100 * row['excess_vs_oracle']:.1f}\\%"
             lo, hi = row["diff_vs_tau0_ci"]
             vals[f"{k}/diff_tau0_ci"] = f"[{lo:+.2f}, {hi:+.2f}]"
+            base = row["deployed_rmse"] - row["diff_vs_tau0"]
+            vals[f"{k}/rel_tau0_pct"] = f"{100 * row['diff_vs_tau0'] / base:+.1f}\\%"
+            vals[f"{k}/rel_tau0_ci"] = f"[{100 * lo / base:+.1f}, {100 * hi / base:+.1f}]\\%"
             lo, hi = row["rmse_ci"]
             vals[f"{k}/rmse_ci"] = f"[{lo:.2f}, {hi:.2f}]"
     for d, path in params["study"]["datasets"].items():
@@ -199,6 +202,40 @@ def numbers_tex(results: dict, params: dict) -> str:
         vals[f"{d}/static_best_rmse"] = _fmt(st[best])
         rmses = [r["deployed_rmse"] for r in res["results"] if r["window"] == 30]
         vals[f"{d}/spread_pct"] = f"{100 * (max(rmses) / min(rmses) - 1):.1f}\\%"
+    # Cross-dataset ranges (controls excluded), e.g. \R{range/tau0/7/swaps} -> "30--44"
+    from src.study.hypotheses import CONTROLS
+
+    counted = [r for k, r in results.items() if k not in CONTROLS]
+    vals["n_datasets"] = str(len(counted))
+    for pol in POLICY_ORDER:
+        for v in params["study"]["windows"]:
+            rows = [next(x for x in r["results"] if x["policy"] == pol and x["window"] == v)
+                    for r in counted]  # fmt: skip
+            for f in ("swaps", "harmful"):
+                xs = [x[f] for x in rows]
+                vals[f"range/{pol}/{v}/{f}"] = f"{min(xs)}--{max(xs)}"
+            rates = [x["harmful_rate"] for x in rows if x["harmful_rate"] is not None]
+            if rates:
+                vals[f"range/{pol}/{v}/harmful_pct"] = (
+                    f"{100 * min(rates):.0f}--{100 * max(rates):.0f}\\%"
+                )
+            rel = [x["diff_vs_tau0"] / (x["deployed_rmse"] - x["diff_vs_tau0"]) for x in rows]
+            vals[f"range/{pol}/{v}/rel_tau0_pct"] = (
+                f"{100 * min(rel):+.1f}\\% to {100 * max(rel):+.1f}\\%"
+            )
+    static_wins = sum(
+        r["static_rmse"][min(r["static_rmse"], key=r["static_rmse"].get)]
+        < min(x["deployed_rmse"] for x in r["results"])
+        for r in counted
+    )
+    vals["static_beats_all"] = str(static_wins)
+    gaps = [min(x["deployed_rmse"] for x in r["results"]) / r["oracle"]["deployed_rmse"] - 1
+            for r in counted]  # fmt: skip
+    vals["range/oracle_gap_pct"] = f"{100 * min(gaps):.1f}--{100 * max(gaps):.1f}\\%"
+    osw = [r["oracle"]["swaps"] for r in counted]
+    vals["range/oracle_swaps"] = f"{min(osw)}--{max(osw)}"
+    n_ens = sum(min(r["static_rmse"], key=r["static_rmse"].get) == "ensemble" for r in counted)
+    vals["ensemble_best_static"] = str(n_ens)
     log = subprocess.run(["git", "log", "--format=%h", "--", "docs/study-protocol.md"],
                          cwd=ROOT, capture_output=True, text=True).stdout.split()  # fmt: skip
     vals["protocol_commit"] = log[-1] if log else "unknown"  # first version (pre-registration)
