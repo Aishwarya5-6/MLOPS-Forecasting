@@ -27,7 +27,7 @@ def results_table(name: str, label: str, res: dict, windows: list[int]) -> str:
     rows = {(r["policy"], r["window"]): r for r in res["results"]}
     head = " & ".join(f"$V={v}$ d" for v in windows)
     lines = [
-        r"\begin{table}[ht]", r"\centering", r"\footnotesize",
+        r"\begin{table}[!t]", r"\centering", r"\footnotesize",
         rf"\caption{{{label}: deployed RMSE (swaps/harmful) for each policy and validation window "
         rf"$V$. Replay {res['replay_start']} to {res['replay_end']}; initial champion: "
         rf"{MODEL_TEX.get(res['initial_champion'], _esc(res['initial_champion']))}; "
@@ -46,13 +46,37 @@ def results_table(name: str, label: str, res: dict, windows: list[int]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def full_results_combined(results: dict, labels: dict, windows: list[int]) -> str:
+    """All datasets in one compact table: policies as rows, grouped by dataset."""
+    lines = [
+        r"\begin{table}[!htbp]", r"\centering", r"\scriptsize", r"\setlength{\tabcolsep}{3pt}",
+        r"\caption{Full results: deployed RMSE (swaps/harmful) for every policy, validation "
+        r"window $V$ and dataset.}",
+        r"\label{tab:full}",
+        r"\begin{tabular}{@{}l" + "l" * len(windows) + "@{}}", r"\toprule",
+        "Policy & " + " & ".join(f"$V={v}$ d" for v in windows) + r" \\",
+    ]  # fmt: skip
+    for name, res in results.items():
+        init = MODEL_TEX.get(res["initial_champion"], _esc(res["initial_champion"]))
+        head = (rf"\textit{{{labels.get(name, _esc(name))}}} (initial: {init}; "
+                rf"oracle {res['oracle']['deployed_rmse']:.2f})")  # fmt: skip
+        lines += [r"\midrule", rf"\multicolumn{{{len(windows) + 1}}}{{@{{}}l}}{{{head}}} \\"]
+        rows = {(r["policy"], r["window"]): r for r in res["results"]}
+        for p in POLICIES:
+            cells = [f"{rows[(p, v)]['deployed_rmse']:.2f} ({rows[(p, v)]['swaps']}/"
+                     f"{rows[(p, v)]['harmful']})" for v in windows]  # fmt: skip
+            lines.append(f"{POLICY_TEX[p]} & " + " & ".join(cells) + r" \\")
+    lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
+    return "\n".join(lines) + "\n"
+
+
 def hypotheses_table(ev: dict, labels: dict, windows: list[int]) -> str:
     def mark(x):
         return NA if x is None else (YES if x else NO)
 
     ws = [str(v) for v in windows]
     lines = [
-        r"\begin{table*}[ht]", r"\centering", r"\footnotesize",
+        r"\begin{table*}[t]", r"\centering", r"\footnotesize",
         r"\caption{Pre-registered hypotheses in every cell (\checkmark{} holds, $\times$ fails). "
         r"H1 and H2 are scored per validation window $V$ (days); H3 per threshold. "
         r"The control is reported but not counted.}",
@@ -85,7 +109,7 @@ def hypotheses_table(ev: dict, labels: dict, windows: list[int]) -> str:
 def static_table(results: dict, labels: dict) -> str:
     models = ["snaive", "sarima", "xgb", "xgb_tuned", "lstm", "ensemble"]
     lines = [
-        r"\begin{table}[ht]", r"\centering", r"\footnotesize",
+        r"\begin{table}[!t]", r"\centering", r"\footnotesize",
         r"\caption{RMSE over the replay year if one candidate is served all year (no promotion), "
         r"with the best policy and the hindsight oracle for reference. -- = not a candidate.}",
         r"\label{tab:static}", r"\setlength{\tabcolsep}{3pt}",
@@ -113,7 +137,7 @@ def static_table(results: dict, labels: dict) -> str:
 def cv_table(export: dict) -> str:
     order = ["snaive", "sarima", "xgb", "xgb_tuned", "lstm", "ensemble"]
     lines = [
-        r"\begin{table}[ht]", r"\centering", r"\footnotesize",
+        r"\begin{table}[!t]", r"\centering", r"\footnotesize",
         r"\caption{Cross-validation on CAMS (5 expanding-window folds, 30-day test windows, "
         r"daily 24\,h forecasts). Run IDs refer to the MLflow tracking store.}",
         r"\label{tab:cv}",
@@ -130,7 +154,7 @@ def cv_table(export: dict) -> str:
 
 def registry_table(export: dict) -> str:
     lines = [
-        r"\begin{table}[ht]", r"\centering", r"\footnotesize",
+        r"\begin{table}[!t]", r"\centering", r"\footnotesize",
         r"\caption{Registry state after the Phase~5 demonstration (holdout: the last 30 days of "
         r"CAMS data). The 2\% rule rejected v4 despite a real but small improvement.}",
         r"\label{tab:registry}", r"\setlength{\tabcolsep}{4pt}",
@@ -174,6 +198,7 @@ def write_all(results: dict, labels: dict, windows: list[int]) -> list[str]:
 
     for name, res in results.items():
         put(f"full_{name}.tex", results_table(name, labels.get(name, _esc(name)), res, windows))
+    put("full_all.tex", full_results_combined(results, labels, windows))
     hyp = ROOT / "reports/study/hypotheses.json"
     if hyp.exists():
         ev = json.loads(hyp.read_text())

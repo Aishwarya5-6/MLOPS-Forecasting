@@ -1471,8 +1471,8 @@ stages:
       size: 15212
     - path: src/study/tables.py
       hash: md5
-      md5: 82f35c3fc0e6dbae0675ad01948f51b6
-      size: 8719
+      md5: a11bb55aa4c7246826ae6c6019853c2a
+      size: 10217
     params:
       params.yaml:
         study.windows:
@@ -1482,7 +1482,7 @@ stages:
     outs:
     - path: paper/figures
       hash: md5
-      md5: 6a6aab59cb3945ff6010fa8b0938bd6a.dir
+      md5: fa72005cc07761d3a947a2a6edf65fd8.dir
       size: 125251
       nfiles: 4
     - path: paper/numbers.tex
@@ -1491,6 +1491,6 @@ stages:
       size: 138614
     - path: paper/tables
       hash: md5
-      md5: c28d4046104a8e697e04d951766f7fa3.dir
-      size: 8867
-      nfiles: 10
+      md5: de2f53400215aa837eb3ffaf1c632a79.dir
+      size: 12152
+      nfiles: 11
