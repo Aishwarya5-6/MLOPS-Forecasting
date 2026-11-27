@@ -61,7 +61,11 @@ def evaluate(results: dict[str, dict], windows: list[int]) -> dict:
         vals = total(h)
         summary[h] = {"holds": sum(x is True for x in vals), "fails": sum(x is False for x in vals),
                       "undefined": sum(x is None for x in vals), "cells": len(vals)}  # fmt: skip
-    return {"per_dataset": out, "summary": summary, "controls": sorted(CONTROLS)}
+    every = lambda h: [x for d in out.values() for x in d[h].values()]  # noqa: E731
+    summary_all = {h: {"holds": sum(x is True for x in every(h)), "cells": len(every(h))}
+                   for h in ("H1", "H2", "H3")}  # fmt: skip
+    return {"per_dataset": out, "summary": summary, "summary_with_controls": summary_all,
+            "controls": sorted(CONTROLS)}  # fmt: skip
 
 
 def main() -> None:

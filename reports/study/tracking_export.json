@@ -1,0 +1,112 @@
+{
+ "cv": {
+  "snaive": {
+   "run_id": "ed80e080486a4992b6062ba0bf04437b",
+   "run_name": "seasonal_naive_24",
+   "mae": 7.814777777777778,
+   "rmse": 10.361555918908952,
+   "smape": 29.121516305436934
+  },
+  "sarima": {
+   "run_id": "493cf78d266f4ee39ba6a0afcaef043e",
+   "run_name": "sarima-101-101x24-42d-log",
+   "mae": 6.255831653831022,
+   "rmse": 8.371699010215504,
+   "smape": 23.609608594998008
+  },
+  "xgb": {
+   "run_id": "9c305ef0b75643fcb58037f7bb61515f",
+   "run_name": "xgb-d6-lr0.05-n400-log",
+   "mae": 6.336183997154235,
+   "rmse": 8.307401041369424,
+   "smape": 23.330030972502435
+  },
+  "xgb_tuned": {
+   "run_id": "d5b80a0937fa4eb187a8e216f52d837c",
+   "run_name": "xgb-tuned-optuna-t17",
+   "mae": 6.21070880095164,
+   "rmse": 8.149957113018042,
+   "smape": 23.340147817891673
+  },
+  "lstm": {
+   "run_id": "9fcaaa80500e40f1b1a951f7a576bd9e",
+   "run_name": "lstm-h64-l2-w168-lr0.001",
+   "mae": 6.61322378578451,
+   "rmse": 8.781358812412941,
+   "smape": 24.267070774446427
+  },
+  "ensemble": {
+   "run_id": "dd2479f418d04f55bf8330fb3f18db6f",
+   "run_name": "ens-xgbtuned-sarima",
+   "mae": 5.999062090766469,
+   "rmse": 7.9644595815260715,
+   "smape": 22.77720975351017
+  }
+ },
+ "sweep": {
+  "run_id": "919b2c36950c468abc0f427b1c7f33ba",
+  "n_trials": 40,
+  "best_rmse": 8.149257467454078,
+  "importance": {
+   "learning_rate": 0.5378119342635459,
+   "n_estimators": 0.19439136883397523,
+   "min_child_weight": 0.14504975996317765,
+   "colsample_bytree": 0.04163804317317957,
+   "subsample": 0.0408133390967766,
+   "max_depth": 0.04029555466934509
+  }
+ },
+ "registry": [
+  {
+   "version": "1",
+   "aliases": [],
+   "model_type": "xgb",
+   "cv_rmse": "8.307401041369424",
+   "holdout_rmse": "12.0806"
+  },
+  {
+   "version": "2",
+   "aliases": [
+    "baseline"
+   ],
+   "run_name": "seasonal_naive_24",
+   "model_type": "seasonal_naive",
+   "cv_rmse": "10.361555918908952",
+   "holdout_rmse": "14.6621",
+   "role": "baseline"
+  },
+  {
+   "version": "3",
+   "aliases": [],
+   "run_name": "lstm-h64-l2-w168-lr0.001",
+   "model_type": "lstm",
+   "cv_rmse": "8.781358812412941",
+   "holdout_rmse": "13.0130",
+   "holdout_vs_champion": "-0.0772",
+   "rejected_reason": "not enough improvement: holdout RMSE 13.013 vs champion 12.081 (-7.7%; rule needs >= 2%)"
+  },
+  {
+   "version": "4",
+   "aliases": [],
+   "run_name": "xgb-tuned-optuna-t17",
+   "model_type": "xgb",
+   "cv_rmse": "8.149957113018042",
+   "holdout_rmse": "11.9162",
+   "holdout_vs_champion": "+0.0136",
+   "rejected_reason": "not enough improvement: holdout RMSE 11.916 vs champion 12.081 (+1.4%; rule needs >= 2%)"
+  },
+  {
+   "version": "5",
+   "aliases": [
+    "champion"
+   ],
+   "run_name": "ens-xgbtuned-sarima",
+   "model_type": "ensemble",
+   "cv_rmse": "7.9644595815260715",
+   "holdout_rmse": "11.4247",
+   "holdout_vs_champion": "+0.0543",
+   "promoted_on": "2026-11-27T14:39:33Z",
+   "previous_champion": "1"
+  }
+ ]
+}

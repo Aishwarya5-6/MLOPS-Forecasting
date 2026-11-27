@@ -1441,8 +1441,8 @@ stages:
       size: 89128
     - path: src/study/hypotheses.py
       hash: md5
-      md5: 602f90321d9ff4d8f9eb1f85e711b996
-      size: 3179
+      md5: d09620a1129fe82a6fc55211167cbc7d
+      size: 3478
     params:
       params.yaml:
         study.windows:
@@ -1452,19 +1452,27 @@ stages:
     outs:
     - path: reports/study/hypotheses.json
       hash: md5
-      md5: faf19622c71fdd5314dcd425d5988dde
-      size: 1654
+      md5: 208b2b5ff0d32211175925afb154cf18
+      size: 1822
   study_figures:
     cmd: python -m src.study.figures
     deps:
     - path: reports/study/hypotheses.json
       hash: md5
-      md5: faf19622c71fdd5314dcd425d5988dde
-      size: 1654
+      md5: 208b2b5ff0d32211175925afb154cf18
+      size: 1822
+    - path: reports/study/tracking_export.json
+      hash: md5
+      md5: d0da9dcf331efbc55cb5ec5900f9dc98
+      size: 2914
     - path: src/study/figures.py
       hash: md5
-      md5: ca66138d18fdba6b23d7fe8649a27460
-      size: 12838
+      md5: 4282a80d712b708a525eea82f98c1217
+      size: 15212
+    - path: src/study/tables.py
+      hash: md5
+      md5: 82f35c3fc0e6dbae0675ad01948f51b6
+      size: 8719
     params:
       params.yaml:
         study.windows:
@@ -1474,10 +1482,15 @@ stages:
     outs:
     - path: paper/figures
       hash: md5
-      md5: 38e4f107812395893fe64bf851de2421.dir
-      size: 74803
-      nfiles: 3
+      md5: 6a6aab59cb3945ff6010fa8b0938bd6a.dir
+      size: 125251
+      nfiles: 4
     - path: paper/numbers.tex
       hash: md5
-      md5: 0f123937b7067d80dfefbd17970f0742
-      size: 136199
+      md5: 9d5f9bb1cdf866576c3a8cd2df9496a3
+      size: 138614
+    - path: paper/tables
+      hash: md5
+      md5: c28d4046104a8e697e04d951766f7fa3.dir
+      size: 8867
+      nfiles: 10

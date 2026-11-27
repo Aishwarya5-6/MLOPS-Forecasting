@@ -131,11 +131,15 @@ stages:
     cmd: python -m src.study.figures
     deps:
       - reports/study/hypotheses.json
+      - reports/study/tracking_export.json
       - src/study/figures.py
+      - src/study/tables.py
     params:
       - study.windows
     outs:
       - paper/figures:
           cache: false
       - paper/numbers.tex:
+          cache: false
+      - paper/tables:
           cache: false

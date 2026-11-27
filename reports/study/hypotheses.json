@@ -123,6 +123,20 @@
    "cells": 15
   }
  },
+ "summary_with_controls": {
+  "H1": {
+   "holds": 16,
+   "cells": 18
+  },
+  "H2": {
+   "holds": 6,
+   "cells": 18
+  },
+  "H3": {
+   "holds": 14,
+   "cells": 18
+  }
+ },
  "controls": [
   "station_nolstm"
  ]
