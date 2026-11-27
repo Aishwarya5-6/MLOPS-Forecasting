@@ -43,3 +43,18 @@ def test_sub_hourly_readings_averaged_and_index_regular():
     assert out.index.freq is None or out.index.freqstr == "h"
     assert len(out) == 3
     assert out["pm25"].iloc[0] == 15.0
+
+
+def test_load_station_filters_city(tmp_path):
+    from src.station import load_station
+
+    p = tmp_path / "city_hour.csv"
+    p.write_text(
+        "City,Datetime,PM2.5,PM10\n"
+        "Delhi,2019-01-01 00:00:00,200,300\n"
+        "Hyderabad,2019-01-01 00:00:00,40.5,80\n"
+        "Hyderabad,2019-01-01 01:00:00,,80\n"
+    )
+    df = load_station(p)
+    assert list(df["value"].fillna(-1)) == [40.5, -1]
+    assert df["timestamp"].iloc[0] == pd.Timestamp("2019-01-01 00:00")
