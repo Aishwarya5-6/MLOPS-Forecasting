@@ -17,10 +17,23 @@ An end-to-end MLOps platform that forecasts Hyderabad air quality (PM2.5). The p
 
 **Reproduce the paper's numbers, tables and figures:**
 
+The raw data are not stored in this repository. Both sources are openly licensed and can be re-downloaded exactly:
+
 ```bash
-dvc pull      # data and forecast caches (see Data and attribution for the CPCB file)
-dvc repro     # caches -> replays -> hypothesis scoring -> paper/figures, paper/tables, paper/numbers.tex
+uv venv --python 3.11 .venv && source .venv/bin/activate && uv pip install -r requirements.txt
+
+# 1. CAMS series: fixed end date -> byte-identical to the version used (MD5 4f244f3c..., verified 28 Nov 2026)
+python -m src.download openmeteo --end 2026-11-22
+
+# 2. CPCB series: download city_hour.csv (CC0) from Kaggle into data/raw/station/
+#    https://www.kaggle.com/datasets/rohanrao/air-quality-data-in-india   (MD5 6d9c5b1a...)
+
+# 3. Check both files match the versions used, then rebuild everything
+dvc status data/raw/pm25_raw.csv.dvc data/raw/station/city_hour.csv.dvc   # should report no changes
+dvc repro     # prepare -> forecast caches -> replays -> hypotheses -> paper/figures, tables, numbers.tex
 ```
+
+`dvc repro` takes about 1.5 hours on a laptop CPU, almost all of it LSTM training. No MLflow server is needed: the few numbers taken from MLflow are stored in `reports/study/tracking_export.json`. Tree models, SARIMA and the baselines are deterministic; the seeded LSTM may differ slightly across hardware and thread counts.
 
 The LaTeX source is in [paper/](paper/). Every number in the text is a macro from the generated `paper/numbers.tex`. Set `\extendedtrue` / `\extendedfalse` at the top of `paper/main.tex` for the extended or the conference version.
 

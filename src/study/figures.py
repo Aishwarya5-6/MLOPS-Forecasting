@@ -267,6 +267,15 @@ def numbers_tex(results: dict, params: dict) -> str:
                 vals[f"reg/v{v}/holdout"] = f"{float(r['holdout_rmse']):.2f}"
             if "holdout_vs_champion" in r:
                 vals[f"reg/v{v}/vs"] = f"{100 * float(r['holdout_vs_champion']):+.1f}\\%"
+    import yaml
+
+    for key, dvcfile in (("cams", "data/raw/pm25_raw.csv.dvc"),
+                         ("station", "data/raw/station/city_hour.csv.dvc")):  # fmt: skip
+        md5 = yaml.safe_load((ROOT / dvcfile).read_text())["outs"][0]["md5"]
+        vals[f"md5/{key}"] = md5[:8]
+    raw = pd.read_csv(ROOT / params["data"]["raw_file"], usecols=["datetime"])
+    vals["cams/raw_start"] = params["data"]["start_date"]
+    vals["cams/raw_end"] = str(pd.to_datetime(raw["datetime"]).max().date())
     log = subprocess.run(["git", "log", "--format=%h", "--", "docs/study-protocol.md"],
                          cwd=ROOT, capture_output=True, text=True).stdout.split()  # fmt: skip
     vals["protocol_commit"] = log[-1] if log else "unknown"  # first version (pre-registration)
