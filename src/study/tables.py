@@ -109,7 +109,7 @@ def hypotheses_table(ev: dict, labels: dict, windows: list[int]) -> str:
 def static_table(results: dict, labels: dict) -> str:
     models = ["snaive", "sarima", "xgb", "xgb_tuned", "lstm", "ensemble"]
     lines = [
-        r"\begin{table}[!t]", r"\centering", r"\footnotesize",
+        r"\begin{table*}[t]", r"\centering", r"\footnotesize",
         r"\caption{RMSE over the replay year if one candidate is served all year (no promotion), "
         r"with the best policy and the hindsight oracle for reference. -- = not a candidate.}",
         r"\label{tab:static}", r"\setlength{\tabcolsep}{3pt}",
@@ -130,7 +130,7 @@ def static_table(results: dict, labels: dict) -> str:
         bp = min(r["deployed_rmse"] for r in res["results"])
         cells += [f"{bp:.2f}", f"{res['oracle']['deployed_rmse']:.2f}"]
         lines.append(labels.get(name, _esc(name)) + " & " + " & ".join(cells) + r" \\")
-    lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
+    lines += [r"\bottomrule", r"\end{tabular}", r"\end{table*}"]
     return "\n".join(lines) + "\n"
 
 

@@ -21,3 +21,4 @@ wandb/
 *.joblib
 *.onnx
 *.pt
+paper/main.pdf

@@ -22,7 +22,7 @@
 
 \begin{document}
 
-\title{How Strict Should Automated Model Promotion Be?\\
+\title{How Strict Should Automated Model Promotion Be?
 A Replay Study of Champion--Challenger Rules for PM\textsubscript{2.5} Forecasting%
 \ifextended\\ {\large (Extended Version)}\fi}
 
@@ -163,7 +163,8 @@ recorded previous champion.
 \draw[arr] (raw) -- (dvc); \draw[arr] (dvc) -- (cv); \draw[arr] (cv) -- (ml);
 \draw[arr] (ml) -- (reg); \draw[arr] (dvc) -- (cache); \draw[arr] (cache) -- (rep);
 \draw[arr] (rep) -- (hyp); \draw[arr] (hyp) -- (pap);
-\draw[arr, dashed] (reg.south) |- node[pos=0.25, right, font=\scriptsize] {same rule} (rep.east);
+\draw[arr, dashed] (reg.south) -- ++(0,-2.5mm) -| node[pos=0.25, above, font=\scriptsize]
+  {same promotion rule} (rep.north);
 \end{tikzpicture}
 \caption{Testbed (top) and study pipeline (bottom). Every arrow is a versioned DVC stage or a
 logged MLflow run; the replay calls the same promotion function as the production registry script.}
@@ -277,13 +278,13 @@ Chennai, CPCB & \cell{station_chennai/tau0/30} & \cell{station_chennai/tau2/30} 
 \end{tabular}
 \end{table*}
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/swaps.pdf}
+\includegraphics[width=0.85\linewidth]{figures/swaps.pdf}
 \caption{Swaps per year on Hyderabad, split into helpful and harmful (worse over the following
 week). Stricter thresholds and longer windows remove mostly harmful swaps.}
 \label{fig:swaps}
-\end{figure}
+\end{figure*}
 
 \textbf{Zero-threshold promotion mostly follows noise (H1: \R{H1/holds}/\R{H1/cells} cells).}
 With \(\tau=0\) and a 7-day window, the production model changed \R{range/tau0/7/swaps} times in 52
@@ -314,13 +315,13 @@ three on Chennai. Table~\ref{tab:hyp} lists every cell.
 
 \input{tables/hypotheses.tex}
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/cities.pdf}
+\includegraphics[width=0.85\linewidth]{figures/cities.pdf}
 \caption{All datasets, \(V=30\) days. Top: change in deployed RMSE relative to \(\tau=0\), with
 paired week-block bootstrap 95\% intervals. Bottom: harmful swaps per year.}
 \label{fig:cities}
-\end{figure}
+\end{figure*}
 
 \textbf{Too strict is also costly.} Never switching depends entirely on the starting model. In
 Bengaluru, where the initial champion was already the ensemble, it was the best rule
@@ -339,9 +340,15 @@ the week-to-week ranking does change, but not predictably from the previous week
 
 \begin{figure*}[t]
 \centering
+\ifextended
+\includegraphics[width=0.85\linewidth]{figures/timeline_all.pdf}
+\caption{Champion served in each week for all five datasets (\(V=30\) days). Low thresholds
+oscillate between models of similar accuracy; the oracle's choice changes in most weeks.}
+\else
 \includegraphics[width=0.85\linewidth]{figures/timeline.pdf}
 \caption{Champion served in each week of the Hyderabad replays (\(V=30\) days). Low thresholds
 oscillate between models of similar accuracy; the oracle's choice changes in most weeks.}
+\fi
 \label{fig:timeline}
 \end{figure*}
 
@@ -356,17 +363,9 @@ try to solve; the oracle column shows the gain available if the weekly winner co
 
 \input{tables/static.tex}
 
-\textbf{All datasets over time.} Fig.~\ref{fig:timeline-all} extends Fig.~\ref{fig:timeline} to
-the three additional cities. The pattern is the same: \(\tau\le2\%\) changes model every few weeks
+\textbf{All datasets over time.} In every dataset (Fig.~\ref{fig:timeline}) the pattern is the same: \(\tau\le2\%\) changes model every few weeks
 between candidates of similar accuracy, while \(\tau\ge5\%\), the DM rule and never-switch keep one
 model for months.
-
-\begin{figure*}[t]
-\centering
-\includegraphics[width=0.85\linewidth]{figures/timeline_all.pdf}
-\caption{Champion served in each week for all five datasets (\(V=30\) days).}
-\label{fig:timeline-all}
-\end{figure*}
 
 \textbf{Control without the LSTM.} Replaying Hyderabad CPCB with the same five candidates as the
 other cities gives deployed RMSE \R{station_nolstm/tau0/30/deployed_rmse},
