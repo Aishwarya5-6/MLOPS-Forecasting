@@ -2,7 +2,7 @@
 
 **Date:** 23 Nov 2026
 **Status:** Complete. Every item on the MVP checklist is ticked, so **the Part 1 MVP is done.**
-**Plan reference:** [project-plan.md](project-plan.md), section 8, Phase 3, and the section 4 MVP checklist
+**Plan reference:** the original project plan (private), section 8, Phase 3, and the section 4 MVP checklist
 
 ## Goal
 

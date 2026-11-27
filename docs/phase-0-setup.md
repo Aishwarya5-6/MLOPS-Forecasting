@@ -2,7 +2,7 @@
 
 **Date:** 23 Nov 2026
 **Status:** Complete, except W&B login (blocked; see [Open items](#open-items))
-**Plan reference:** [project-plan.md](project-plan.md), section 8, Phase 0
+**Plan reference:** the original project plan (private), section 8, Phase 0
 
 ## Goal
 
@@ -58,7 +58,6 @@ MLOPS Forecasting/
 ├── data/raw/.gitkeep       # data itself goes to DVC in Phase 1
 ├── data/processed/.gitkeep
 ├── docs/
-│   ├── project-plan.md     # full project documentation (moved here from the root)
 │   └── phase-0-setup.md    # this file
 ├── notebooks/              # EDA notebooks (Phase 1)
 ├── src/

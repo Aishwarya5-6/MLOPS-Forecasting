@@ -1,6 +1,6 @@
 # MLOps Forecasting Platform
 
-An end-to-end MLOps platform that forecasts Hyderabad air quality (PM2.5). The pipeline is reproducible, every run is tracked, and models are promoted through a registry. The full plan is in [docs/project-plan.md](docs/project-plan.md).
+An end-to-end MLOps platform that forecasts Hyderabad air quality (PM2.5). The pipeline is reproducible, every run is tracked, and models are promoted through a registry.
 
 **Status:** Part 1, Phase 5 complete (automated champion/challenger promotion with `promote.py`), plus a pre-registered study of promotion rules written up as a paper ([below](#paper)). Phase notes: [Phase 0](docs/phase-0-setup.md), [Phase 1](docs/phase-1-data.md), [Phase 2](docs/phase-2-evaluation.md), [Phase 3](docs/phase-3-mlflow-models.md), [Phase 4](docs/phase-4-lstm-sweep.md), [Phase 5](docs/phase-5-registry.md), [Paper study](docs/phase-paper-study.md).
 

@@ -2,7 +2,7 @@
 
 **Date:** 23 Nov 2026
 **Status:** Complete. Both exit checks pass.
-**Plan reference:** [project-plan.md](project-plan.md), section 8, Phase 1
+**Plan reference:** the original project plan (private), section 8, Phase 1
 
 ## Goal
 

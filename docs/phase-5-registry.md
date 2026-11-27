@@ -2,7 +2,7 @@
 
 **Date:** 27 Nov 2026
 **Status:** Complete. The exit check passes, but the registry screenshots still need to be taken by hand (see [Open items](#open-items)).
-**Plan reference:** [project-plan.md](project-plan.md), section 8 Phase 5, and section 9 (promotion policy)
+**Plan reference:** the original project plan (private), section 8 Phase 5, and section 9 (promotion policy)
 
 ## Goal
 
