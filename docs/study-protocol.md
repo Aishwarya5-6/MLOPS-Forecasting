@@ -99,4 +99,22 @@ With 52 decisions per cell, the swap counts are small. The harmful-swap results 
 
 ## Deviations
 
-None so far.
+### D1 (27 Nov 2026): more cities
+
+Recorded **before any replay result was computed for any dataset**, and before any coverage statistic was looked at for the cities below.
+
+- **Why:** "one city" is the main threat to generality. `city_hour.csv` already contains other cities.
+- **New datasets:** `station_delhi`, `station_bengaluru`, `station_chennai`, `station_kolkata`, `station_mumbai`.
+  - Each is the city-level hourly PM2.5 from `city_hour.csv` (`City` = Delhi, Bengaluru, Chennai, Kolkata, Mumbai).
+  - Each is cleaned with the same `clean()` and parameters as `station`.
+  - The replay design is identical: last 365 days, 30-day refits, 52 weekly decisions.
+- **Candidates for these five:** `snaive`, `sarima`, `xgb`, `xgb_tuned` and the derived `ensemble`, i.e. **no LSTM**. This limits compute and heat on the laptop used. Hyperparameters are not re-tuned.
+- **Like-for-like control:** Hyderabad `station` is also replayed with the same five candidates, as `station_nolstm`, from its existing cache. The full six-candidate `station` result is still reported.
+- **Eligibility rule** (applied mechanically; failing cities are excluded and listed in the paper):
+  1. At least 80% of hours are present (not `is_missing`) in the cache period, i.e. the replay year + 30 days.
+  2. At least 730 days of data exist before the cache period starts.
+- **Analysis:**
+  - The policies, metrics and hypotheses are unchanged.
+  - Across datasets, each hypothesis is summarised as the number of datasets where it holds, using the per-dataset criteria above, plus a per-dataset table.
+  - The primary results remain `cams` and `station` (Hyderabad).
+- **LSTM threads:** the Hyderabad `station` LSTM runs with 4 CPU threads (heat). Thread count can change floating-point summation order, so results are reproducible for the same thread setting.
