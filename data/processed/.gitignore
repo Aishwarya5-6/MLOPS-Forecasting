@@ -1,3 +1,6 @@
 /pm25_hourly.parquet
 /features.parquet
 /station_pm25_hourly.parquet
+/station_chennai.parquet
+/station_bengaluru.parquet
+/station_delhi.parquet

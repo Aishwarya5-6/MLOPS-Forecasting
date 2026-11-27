@@ -129,3 +129,111 @@ stages:
       hash: md5
       md5: 173140abde59a4162f30208c6e93e04e
       size: 502658
+  prepare_station@Chennai:
+    cmd: python -m src.station --city Chennai
+    deps:
+    - path: data/raw/station/city_hour.csv
+      hash: md5
+      md5: 6d9c5b1a275ad13cfe18de2d9ade59c1
+      size: 65648581
+    - path: src/data.py
+      hash: md5
+      md5: f8cb0bc4d3963c5f65eeffc1fdcb6cac
+      size: 5656
+    - path: src/station.py
+      hash: md5
+      md5: 71d864e5ccdf0202ac4a893509d0a6b3
+      size: 1999
+    params:
+      params.yaml:
+        prepare:
+          freq: h
+          min_value: 0.0
+          max_value: 999.0
+          max_gap_hours: 6
+    outs:
+    - path: data/processed/station_chennai.parquet
+      hash: md5
+      md5: f2707256c79263f6d40617c583edcb29
+      size: 541303
+  prepare_station@Bengaluru:
+    cmd: python -m src.station --city Bengaluru
+    deps:
+    - path: data/raw/station/city_hour.csv
+      hash: md5
+      md5: 6d9c5b1a275ad13cfe18de2d9ade59c1
+      size: 65648581
+    - path: src/data.py
+      hash: md5
+      md5: f8cb0bc4d3963c5f65eeffc1fdcb6cac
+      size: 5656
+    - path: src/station.py
+      hash: md5
+      md5: 71d864e5ccdf0202ac4a893509d0a6b3
+      size: 1999
+    params:
+      params.yaml:
+        prepare:
+          freq: h
+          min_value: 0.0
+          max_value: 999.0
+          max_gap_hours: 6
+    outs:
+    - path: data/processed/station_bengaluru.parquet
+      hash: md5
+      md5: 9f26a76cab734f84dec7d0715d3c1f4a
+      size: 528056
+  prepare_station@Delhi:
+    cmd: python -m src.station --city Delhi
+    deps:
+    - path: data/raw/station/city_hour.csv
+      hash: md5
+      md5: 6d9c5b1a275ad13cfe18de2d9ade59c1
+      size: 65648581
+    - path: src/data.py
+      hash: md5
+      md5: f8cb0bc4d3963c5f65eeffc1fdcb6cac
+      size: 5656
+    - path: src/station.py
+      hash: md5
+      md5: 71d864e5ccdf0202ac4a893509d0a6b3
+      size: 1999
+    params:
+      params.yaml:
+        prepare:
+          freq: h
+          min_value: 0.0
+          max_value: 999.0
+          max_gap_hours: 6
+    outs:
+    - path: data/processed/station_delhi.parquet
+      hash: md5
+      md5: 4c4fd374c720bc12ed8743ed70ea8402
+      size: 616510
+  prepare_station@Hyderabad:
+    cmd: python -m src.station --city Hyderabad
+    deps:
+    - path: data/raw/station/city_hour.csv
+      hash: md5
+      md5: 6d9c5b1a275ad13cfe18de2d9ade59c1
+      size: 65648581
+    - path: src/data.py
+      hash: md5
+      md5: f8cb0bc4d3963c5f65eeffc1fdcb6cac
+      size: 5656
+    - path: src/station.py
+      hash: md5
+      md5: 71d864e5ccdf0202ac4a893509d0a6b3
+      size: 1999
+    params:
+      params.yaml:
+        prepare:
+          freq: h
+          min_value: 0.0
+          max_value: 999.0
+          max_gap_hours: 6
+    outs:
+    - path: data/processed/station_pm25_hourly.parquet
+      hash: md5
+      md5: 173140abde59a4162f30208c6e93e04e
+      size: 502658

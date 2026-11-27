@@ -32,9 +32,25 @@ forecast:
 
 # Promotion-policy study (paper). Protocol: docs/study-protocol.md. Fixed before results.
 study:
-  datasets:
+  datasets:                 # caches: name -> prepared hourly series
     cams: data/processed/pm25_hourly.parquet
-    station: data/processed/station_pm25_hourly.parquet
+    station: data/processed/station_pm25_hourly.parquet          # CPCB Hyderabad
+    station_delhi: data/processed/station_delhi.parquet          # protocol deviation D1
+    # Kolkata, Mumbai excluded by the D1 eligibility rule (~410 days of history < 730)
+    station_bengaluru: data/processed/station_bengaluru.parquet
+    station_chennai: data/processed/station_chennai.parquet
+  dataset_candidates:       # D1: extra cities without the LSTM (compute / heat)
+    station_delhi: [snaive, sarima, xgb, xgb_tuned]
+    station_bengaluru: [snaive, sarima, xgb, xgb_tuned]
+    station_chennai: [snaive, sarima, xgb, xgb_tuned]
+  replays:                  # replay name -> which cache (and optionally a candidate subset)
+    cams: {cache: cams}
+    station: {cache: station}
+    station_nolstm: {cache: station, candidates: [snaive, sarima, xgb, xgb_tuned]}
+    station_delhi: {cache: station_delhi}
+    station_bengaluru: {cache: station_bengaluru}
+    station_chennai: {cache: station_chennai}
+  lstm_threads: 4           # D1: LSTM cache runs on 4 threads (station only; cams ran before D1)
   replay_days: 365          # replay window = last 365 days of each dataset
   max_window_days: 30       # cache starts this many days before the replay (longest validation window)
   refit_every_days: 30      # every candidate is refit on all data before the refit time

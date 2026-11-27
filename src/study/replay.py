@@ -1,6 +1,6 @@
 """Replay a year of weekly promotion decisions from the forecast cache (docs/study-protocol.md).
 
-    python -m src.study.replay --dataset cams      # -> reports/study/cams/results.json, summary.csv
+    python -m src.study.replay --replay cams      # -> reports/study/cams/results.json, summary.csv
 
 Every (policy, validation window V) starts from the same initial champion. At each weekly
 decision point the best non-champion candidate on the last V days is the challenger; the policy
@@ -109,14 +109,17 @@ def replay_oracle(origins, err, decisions, week_days: int = 7) -> Replay:
     return r
 
 
-def run(dataset: str, params: dict | None = None) -> dict:
+def run(replay: str, params: dict | None = None) -> dict:
+    """Replay `replay` (a key of study.replays: which cache, and optionally which candidates)."""
     from src.study.cache import load_cache, make_schedule
 
     params = params or load_params()
     study = params["study"]
+    spec = study["replays"][replay]
+    dataset = spec["cache"]
     y = pd.read_parquet(ROOT / study["datasets"][dataset])["pm25"]
     sched = make_schedule(y.index, study, params["forecast"]["horizon"])
-    origins, err = error_matrices(load_cache(dataset, params))
+    origins, err = error_matrices(load_cache(dataset, params, spec.get("candidates")))
     decisions = [sched.replay_start + k * study["decide_every_days"] * DAY
                  for k in range(study["n_decisions"])]  # fmt: skip
     init = initial_champion(origins, err, sched.replay_start, study["init_window_days"])
@@ -156,7 +159,9 @@ def run(dataset: str, params: dict | None = None) -> dict:
             "champions": r.champions, "events": r.events,
         })  # fmt: skip
     return {
-        "dataset": dataset,
+        "dataset": replay,
+        "cache": dataset,
+        "candidates": list(err),
         "replay_start": str(sched.replay_start.date()),
         "replay_end": str((decisions[-1] + (study["decide_every_days"] - 1) * DAY).date()),
         "n_decisions": len(decisions),
@@ -180,15 +185,15 @@ def summary_table(res: dict) -> pd.DataFrame:
 
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
-    p.add_argument("--dataset", required=True)
+    p.add_argument("--replay", required=True, help="a key of params study.replays")
     args = p.parse_args(argv)
-    res = run(args.dataset)
-    out = ROOT / "reports/study" / args.dataset
+    res = run(args.replay)
+    out = ROOT / "reports/study" / args.replay
     out.mkdir(parents=True, exist_ok=True)
     (out / "results.json").write_text(json.dumps(res, indent=1, default=float))
     table = summary_table(res)
     table.to_csv(out / "summary.csv", index=False, float_format="%.4f")
-    print(f"{args.dataset}: {res['replay_start']} -> {res['replay_end']}, "
+    print(f"{args.replay}: {res['replay_start']} -> {res['replay_end']}, "
           f"initial champion {res['initial_champion']}")  # fmt: skip
     print(table.to_string(index=False, float_format=lambda x: f"{x:.3f}"))
 

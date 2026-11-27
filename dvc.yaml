@@ -12,15 +12,21 @@ stages:
       - data/processed/pm25_hourly.parquet
 
   prepare_station:
-    cmd: python -m src.station
-    deps:
-      - src/station.py
-      - src/data.py
-      - data/raw/station/city_hour.csv
-    params:
-      - prepare
-    outs:
-      - data/processed/station_pm25_hourly.parquet
+    foreach:
+      Hyderabad: {out: data/processed/station_pm25_hourly.parquet}
+      Delhi: {out: data/processed/station_delhi.parquet}
+      Bengaluru: {out: data/processed/station_bengaluru.parquet}
+      Chennai: {out: data/processed/station_chennai.parquet}
+    do:
+      cmd: python -m src.station --city ${key}
+      deps:
+        - src/station.py
+        - src/data.py
+        - data/raw/station/city_hour.csv
+      params:
+        - prepare
+      outs:
+        - ${item.out}
 
   featurize:
     cmd: python -m src.features
@@ -54,6 +60,9 @@ stages:
     foreach:
       cams: {data: data/processed/pm25_hourly.parquet}
       station: {data: data/processed/station_pm25_hourly.parquet}
+      station_delhi: {data: data/processed/station_delhi.parquet}
+      station_bengaluru: {data: data/processed/station_bengaluru.parquet}
+      station_chennai: {data: data/processed/station_chennai.parquet}
     do:
       cmd: python -m src.study.cache --dataset ${key}
       deps:
@@ -71,17 +80,23 @@ stages:
         - study.max_window_days
         - study.refit_every_days
         - study.candidates
+        - study.dataset_candidates
+        - study.lstm_threads
       outs:
         - data/study/${key}
 
   study_replay:
     foreach:
-      cams: {data: data/processed/pm25_hourly.parquet}
-      station: {data: data/processed/station_pm25_hourly.parquet}
+      cams: {cache: cams, data: data/processed/pm25_hourly.parquet}
+      station: {cache: station, data: data/processed/station_pm25_hourly.parquet}
+      station_nolstm: {cache: station, data: data/processed/station_pm25_hourly.parquet}
+      station_delhi: {cache: station_delhi, data: data/processed/station_delhi.parquet}
+      station_bengaluru: {cache: station_bengaluru, data: data/processed/station_bengaluru.parquet}
+      station_chennai: {cache: station_chennai, data: data/processed/station_chennai.parquet}
     do:
-      cmd: python -m src.study.replay --dataset ${key}
+      cmd: python -m src.study.replay --replay ${key}
       deps:
-        - data/study/${key}
+        - data/study/${item.cache}
         - ${item.data}
         - src/study/replay.py
         - src/study/policies.py

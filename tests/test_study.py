@@ -146,3 +146,42 @@ def test_schedule_layout():
     assert (s.replay_end - s.replay_start).days == 364
     assert s.cache_start == s.replay_start - pd.Timedelta(days=30)
     assert s.refits[0] == s.cache_start and len(s.origins) == 395
+
+
+# --------------------------------------------------------------------------- deviation D1
+STUDY = {"replay_days": 365, "max_window_days": 30, "refit_every_days": 30}
+
+
+def test_eligibility_rule():
+    from src.study.cache import eligibility
+
+    idx = pd.date_range("2016-01-01", "2020-06-30 23:00", freq="h")
+    y = pd.Series(1.0, index=idx)
+    assert eligibility(y, STUDY)["eligible"]
+    short = y.loc["2018-06-01":]  # < 730 days before the cache period
+    assert not eligibility(short, STUDY)["eligible"]
+    gappy = y.copy()
+    gappy.loc["2019-07-01":"2019-10-01"] = np.nan  # ~23% of the cache period missing
+    info = eligibility(gappy, STUDY)
+    assert not info["eligible"] and info["present_fraction"] < 0.8
+
+
+def test_candidate_subsets_and_derived_ensemble(tmp_path, monkeypatch):
+    from src.study import cache
+
+    study = {
+        "candidates": {n: {} for n in ["a", "b", "c"]},
+        "dataset_candidates": {"small": ["a", "b"]},
+        "derived": {"ens": ["a", "c"]},
+    }
+    assert cache.candidates_for("small", study) == ["a", "b"]
+    assert cache.candidates_for("other", study) == ["a", "b", "c"]
+    monkeypatch.setattr(cache, "cache_dir", lambda d: tmp_path)
+    for i, n in enumerate(["a", "b", "c"]):
+        pd.DataFrame({"refit": [0], "origin": [0], "step": [1], "forecast": [float(i)],
+                      "actual": [0.0]}).to_parquet(tmp_path / f"{n}.parquet")  # fmt: skip
+    full = cache.load_cache("other", {"study": study})
+    assert set(full["model"]) == {"a", "b", "c", "ens"}
+    assert full.loc[full.model == "ens", "forecast"].item() == 1.0  # mean of a=0 and c=2
+    sub = cache.load_cache("other", {"study": study}, candidates=["a", "b"])
+    assert set(sub["model"]) == {"a", "b"}  # ensemble dropped: member c missing
