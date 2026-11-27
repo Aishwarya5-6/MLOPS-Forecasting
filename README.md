@@ -29,10 +29,10 @@ The LaTeX source is in [paper/](paper/). Every number in the text is a macro fro
 | Dataset | Source | Licence | Used for |
 | --- | --- | --- | --- |
 | Hyderabad PM2.5, Aug 2022 – Nov 2026 | [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api), CAMS global atmospheric-composition model estimates | CC BY 4.0 | Platform (Phases 1–5) and the paper's CAMS dataset |
-| City-level PM2.5 for Hyderabad, Delhi, Bengaluru, Chennai, 2015–2020 | [Air Quality Data in India (2015–2020)](https://www.kaggle.com/datasets/rohanrao/air-quality-data-in-india), compiled from Central Pollution Control Board (CPCB) data | See the dataset page | The paper's CPCB datasets |
+| City-level PM2.5 for Hyderabad, Delhi, Bengaluru, Chennai, 2015–2020 | [Air Quality Data in India (2015–2020)](https://www.kaggle.com/datasets/rohanrao/air-quality-data-in-india), compiled from Central Pollution Control Board (CPCB) data | CC0 1.0 (public domain) | The paper's CPCB datasets |
 
 - **CAMS attribution:** contains modified Copernicus Atmosphere Monitoring Service information, 2026. Neither the European Commission nor ECMWF is responsible for any use of this information. Data access is provided by [Open-Meteo](https://open-meteo.com/).
-- **CPCB data:** download `city_hour.csv` from the Kaggle page above, save it to `data/raw/station/city_hour.csv`, then run `dvc repro`. Please respect the dataset's licence and credit CPCB and the dataset's compiler when you use it.
+- **CPCB data:** download `city_hour.csv` from the Kaggle page above, save it to `data/raw/station/city_hour.csv`, then run `dvc repro`. The dataset is released under CC0 (public domain); please still credit CPCB and the dataset's compiler.
 
 ## Setup
 
