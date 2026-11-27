@@ -1,0 +1,8 @@
+# Equal-weight average of the two best model families from cross-validation.
+# Phase 5 candidate: chosen because XGBoost and SARIMA make different kinds of errors.
+members:
+  - model: xgb
+    config: configs/xgb_tuned.yaml   # Optuna trial 17, CV RMSE 8.150
+  - model: sarima
+    config: configs/sarima.yaml      # CV RMSE 8.372
+weights: null                        # null = equal weights

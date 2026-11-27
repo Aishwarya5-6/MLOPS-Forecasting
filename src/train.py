@@ -17,7 +17,7 @@ from pathlib import Path
 import yaml
 from dotenv import load_dotenv
 
-MODELS = ["dummy", "naive", "seasonal_naive", "sarima", "xgb", "lstm"]
+MODELS = ["dummy", "naive", "seasonal_naive", "sarima", "xgb", "lstm", "ensemble"]
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -83,6 +83,14 @@ def build_model(name: str, cfg: dict, params: dict):
         from src.models.lstm import LSTMModel
 
         return LSTMModel(horizon=horizon, seed=params["seed"], **cfg)
+    if name == "ensemble":
+        from src.models.ensemble import EnsembleModel
+
+        members = [
+            build_model(m["model"], load_config(m["model"], Path(m["config"])), params)
+            for m in cfg["members"]
+        ]
+        return EnsembleModel(members, cfg.get("weights"))
     raise NotImplementedError(f"Model '{name}' is added in a later phase.")
 
 

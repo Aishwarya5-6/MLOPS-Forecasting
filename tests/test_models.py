@@ -100,3 +100,16 @@ def test_sweep_suggest_respects_search_space():
         assert v["n"] in (100, 200, 300)
         assert v["flag"] in (True, False)
         study.tell(trial, 0.0)
+
+
+def test_ensemble_averages_members():
+    from src.models.baseline import NaiveModel, SeasonalNaiveModel
+    from src.models.ensemble import EnsembleModel
+
+    y = pd.Series(np.arange(48.0), index=pd.date_range("2026-01-01", periods=48, freq="h"))
+    naive, snaive = NaiveModel().fit(y), SeasonalNaiveModel(24).fit(y)
+    ens = EnsembleModel([naive, snaive], weights=[3, 1]).fit(y)
+    expected = 0.75 * naive.predict(y, 24) + 0.25 * snaive.predict(y, 24)
+    np.testing.assert_allclose(ens.predict(y, 24), expected)
+    with pytest.raises(ValueError):
+        EnsembleModel([naive], weights=[1, 2])
