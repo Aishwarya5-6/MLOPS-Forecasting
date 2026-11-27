@@ -102,3 +102,30 @@ stages:
       hash: md5
       md5: 4b0e6fb8e83491a91286161df6101967
       size: 258
+  prepare_station:
+    cmd: python -m src.station
+    deps:
+    - path: data/raw/station/city_hour.csv
+      hash: md5
+      md5: 6d9c5b1a275ad13cfe18de2d9ade59c1
+      size: 65648581
+    - path: src/data.py
+      hash: md5
+      md5: f8cb0bc4d3963c5f65eeffc1fdcb6cac
+      size: 5656
+    - path: src/station.py
+      hash: md5
+      md5: d577cb6a1c848ef9a7c581f0f2ed5c26
+      size: 1541
+    params:
+      params.yaml:
+        prepare:
+          freq: h
+          min_value: 0.0
+          max_value: 999.0
+          max_gap_hours: 6
+    outs:
+    - path: data/processed/station_pm25_hourly.parquet
+      hash: md5
+      md5: 173140abde59a4162f30208c6e93e04e
+      size: 502658

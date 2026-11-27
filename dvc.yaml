@@ -11,6 +11,17 @@ stages:
     outs:
       - data/processed/pm25_hourly.parquet
 
+  prepare_station:
+    cmd: python -m src.station
+    deps:
+      - src/station.py
+      - src/data.py
+      - data/raw/station/city_hour.csv
+    params:
+      - prepare
+    outs:
+      - data/processed/station_pm25_hourly.parquet
+
   featurize:
     cmd: python -m src.features
     deps:
@@ -36,4 +47,64 @@ stages:
           cache: false
     outs:
       - reports/baseline_details.json:
+          cache: false
+
+  # ---------------- promotion-policy study (docs/study-protocol.md) ----------------
+  study_cache:
+    foreach:
+      cams: {data: data/processed/pm25_hourly.parquet}
+      station: {data: data/processed/station_pm25_hourly.parquet}
+    do:
+      cmd: python -m src.study.cache --dataset ${key}
+      deps:
+        - ${item.data}
+        - src/study/cache.py
+        - src/models
+        - src/features.py
+        - src/train.py
+        - configs
+      params:
+        - seed
+        - forecast.horizon
+        - study.datasets
+        - study.replay_days
+        - study.max_window_days
+        - study.refit_every_days
+        - study.candidates
+      outs:
+        - data/study/${key}
+
+  study_replay:
+    foreach:
+      cams: {data: data/processed/pm25_hourly.parquet}
+      station: {data: data/processed/station_pm25_hourly.parquet}
+    do:
+      cmd: python -m src.study.replay --dataset ${key}
+      deps:
+        - data/study/${key}
+        - ${item.data}
+        - src/study/replay.py
+        - src/study/policies.py
+        - src/study/stats.py
+        - src/promote.py
+      params:
+        - seed
+        - study
+      outs:
+        - reports/study/${key}/results.json:
+            cache: false
+        - reports/study/${key}/summary.csv:
+            cache: false
+
+  study_figures:
+    cmd: python -m src.study.figures
+    deps:
+      - reports/study
+      - src/study/figures.py
+    params:
+      - study.windows
+    outs:
+      - paper/figures:
+          cache: false
+      - paper/numbers.tex:
           cache: false

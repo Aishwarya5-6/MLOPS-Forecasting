@@ -1,0 +1,194 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+% All result numbers come from reports/study/*/results.json via `python -m src.study.numbers`.
+\input{numbers.tex}
+\providecommand{\AbstractResult}{\textbf{[results pending]}}
+\providecommand{\ResultsPending}{\textbf{[results pending]}}
+
+\begin{document}
+
+\title{How Strict Should Automated Model Promotion Be?\\
+A Replay Study of Champion--Challenger Rules for PM\textsubscript{2.5} Forecasting}
+
+\author{\IEEEauthorblockN{AUTHOR NAME}
+\IEEEauthorblockA{AFFILIATION\\
+EMAIL}}
+
+\maketitle
+
+\begin{abstract}
+MLOps platforms often replace a production forecasting model automatically when a newly trained
+challenger scores better on recent validation data. How much better it must be is usually set by
+hand, and the effect of that choice is rarely measured. We build a reproducible forecasting
+pipeline for hourly PM\textsubscript{2.5} in Hyderabad, India, with versioned data, walk-forward
+evaluation and a model registry. On it, we replay 52 weekly promotion decisions per dataset,
+on two datasets (CAMS reanalysis estimates and CPCB station measurements), with six candidate models.
+We compare relative-improvement thresholds of 0--10\%, a Diebold--Mariano test rule and a
+never-switch rule, each with 7-, 14- and 30-day validation windows, under a protocol fixed before
+any result was computed. \AbstractResult
+\end{abstract}
+
+\begin{IEEEkeywords}
+MLOps, model registry, champion--challenger, model selection, Diebold--Mariano test,
+time-series forecasting, air quality
+\end{IEEEkeywords}
+
+% ---------------------------------------------------------------------------------------------
+\section{Introduction}
+
+Forecasting models in production are retrained as new data arrive. A common way to decide
+whether a retrained or new model should replace the current one is a \emph{champion--challenger}
+rule: score both on a recent window and promote the challenger if it is better, often by a fixed
+margin. Tools such as MLflow~\cite{zaharia2018} make this a few lines of code, using registry
+aliases that downstream services resolve at load time. Surveys of MLOps practice describe automated
+retraining and promotion as a core component~\cite{kreuzberger2023}, and production experience shows
+that the surrounding ``glue'' decisions carry hidden costs~\cite{sculley2015,breck2017}.
+
+The promotion margin, however, is usually a guess. If it is too small, the system follows noise: the
+challenger is, by construction, the best of several candidates on the validation window, so its score is
+optimistically biased~\cite{cawley2010}, and a swap may make the next week \emph{worse}. If it is
+too large, real improvements are kept out of production. Statistical forecast-comparison tests such
+as Diebold--Mariano (DM)~\cite{diebold1995,harvey1997} offer an alternative, but they need enough
+validation data to have power.
+
+We ask: \emph{how do the promotion rule and the validation-window length affect harmful swaps
+and the accuracy of the model actually deployed?} Our contributions are:
+\begin{enumerate}
+  \item An open, reproducible forecasting platform (DVC, MLflow, walk-forward evaluation, leakage
+        tests, registry automation) for hourly PM\textsubscript{2.5}, used as the testbed.
+  \item A \emph{deployment replay} that turns one year of data into 52 promotion decisions, each
+        judged on the following, unseen week.
+  \item A pre-registered comparison of eight rules and three validation windows on reanalysis
+        and station data, with block-bootstrap intervals and DM tests on deployed accuracy.
+\end{enumerate}
+
+% ---------------------------------------------------------------------------------------------
+\section{Related Work}
+
+\textbf{Forecast evaluation.} Out-of-sample evaluation with rolling origins is the standard for
+time series~\cite{tashman2000}; cross-validation can be valid for autoregressive models under
+conditions~\cite{bergmeir2018}. The DM test~\cite{diebold1995} compares the accuracy of two
+\emph{forecasts}, with a small-sample correction by Harvey et al.~\cite{harvey1997}; Diebold later
+warned against using it to compare \emph{models}~\cite{diebold2015}. We use it in the way he recommends: on
+the forecasts a policy actually served. The model confidence set~\cite{hansen2011} generalises
+pairwise tests to many models. Combining forecasts often beats choosing one~\cite{timmermann2006},
+which motivates our ensemble candidate.
+
+\textbf{Selection bias.} Choosing the best of several models on one validation set overfits that
+set~\cite{cawley2010}. A champion--challenger rule repeats this selection every week, so the bias
+compounds into unnecessary swaps.
+
+\textbf{MLOps and retraining.} MLOps architectures~\cite{kreuzberger2023} and tooling~\cite{zaharia2018}
+treat promotion as an automated step. Work on concept drift~\cite{gama2014} studies \emph{when the
+data change}; recent work frames \emph{when to retrain} as a cost trade-off~\cite{regol2025}.
+We study the complementary question of \emph{when to replace} the served model, given candidates.
+
+% ---------------------------------------------------------------------------------------------
+\section{Testbed: A Reproducible Forecasting Pipeline}
+
+\textbf{Data.} Hourly PM\textsubscript{2.5} for Hyderabad from two sources. \emph{CAMS}:
+Copernicus atmospheric-composition model estimates~\cite{inness2019} via the Open-Meteo API,
+Aug 2022--Nov 2026 (\R{cams/hours} hours, no gaps). \emph{Station}: CPCB city-level measurements
+2015--2020 from a public compilation~\cite{rao2020kaggle} (\R{station/hours} hours, \R{station/missing_pct}
+missing after interpolating gaps of up to 6\,h). Raw files and every derived artifact are
+versioned with DVC; a pipeline (\texttt{dvc repro}) rebuilds every number in this paper.
+
+\textbf{Task and evaluation.} 24-hour-ahead forecasts issued daily at midnight (local time).
+Models implement \texttt{fit(train)} once and \texttt{predict(history, h)} from any later origin
+without refitting; a test asserts that \texttt{predict} never sees data at or after the origin.
+Hyperparameters were chosen with five expanding-window folds spread over one year, and XGBoost was
+tuned with 40 Optuna~\cite{akiba2019} trials.
+
+\textbf{Candidates.} Seasonal naive (same hour yesterday); SARIMA(1,0,1)(1,0,1)\textsubscript{24}
+on log values; two direct multi-horizon XGBoost models (hand-set and tuned); a two-layer LSTM;
+and an equal-weight ensemble of tuned XGBoost and SARIMA.
+
+\textbf{Registry.} Each trained model is logged to MLflow with its code version, data hash and
+metrics. A promotion script registers a run, gives it the \texttt{@challenger} alias, scores it
+and the \texttt{@champion} on a holdout window, and moves \texttt{@champion} only if the rule
+passes. Decisions and reasons are stored as version tags, and a one-command rollback follows the
+recorded previous champion.
+
+% ---------------------------------------------------------------------------------------------
+\section{Promotion Policies and Replay}
+
+\textbf{Replay.} For each dataset, the last 365 days form the replay period. Every candidate is
+refit every 30 days on all data before the refit time, and its forecasts for every midnight origin
+are cached (\(\approx\)395 origins \(\times\) 24 steps). At decision points \(t_k = t_0 + 7k\) days,
+\(k=0,\dots,51\):
+\begin{enumerate}
+  \item each candidate's RMSE is computed on the validation window, the last \(V\) origins before \(t_k\);
+  \item the challenger is the best non-champion candidate on that window;
+  \item the policy decides whether to swap;
+  \item the champion serves the next 7 origins, which are scored.
+\end{enumerate}
+All policies start from the same initial champion: the best candidate on the 30 days before \(t_0\).
+
+\textbf{Policies.} \emph{Threshold-\(\tau\)}: promote if
+\((\mathrm{RMSE}_\text{champ}-\mathrm{RMSE}_\text{chall})/\mathrm{RMSE}_\text{champ}\ge\tau\),
+\(\tau\in\{0,1,2,5,10\}\%\). This is the same function the production promotion script calls.
+\emph{DM}: compute the per-origin mean squared error, take the daily loss differential, and promote
+if a one-sided HLN-corrected DM test~\cite{harvey1997} gives \(p<0.05\) in the challenger's favour.
+Daily forecasts do not overlap, so \(h=1\). \emph{Never}: keep the initial champion.
+\emph{Oracle}: serve each week's best model in hindsight; this is a bound, not a policy.
+
+\textbf{Metrics.}
+\begin{itemize}
+  \item \emph{Deployed RMSE}: the RMSE over all 52 served weeks.
+  \item \emph{Swaps}: how often the champion changes.
+  \item \emph{Harmful swaps}: swaps after which the new champion's RMSE over the next week is higher
+        than the old champion's would have been.
+  \item \emph{Excess over the oracle}: how much higher the deployed RMSE is than the oracle's.
+\end{itemize}
+Uncertainty comes from a week-block bootstrap (2,000 resamples, paired across policies), and
+significance from two-sided DM tests on daily deployed losses.
+
+\textbf{Pre-registration.} The policies, metrics and hypotheses below were committed to the
+repository (commit \texttt{\R{protocol_commit}}) before any replay was run:
+\begin{itemize}
+  \item \textbf{H1}: \(\tau=0\) makes more harmful swaps than \(\tau\ge2\%\) without lowering
+        deployed RMSE.
+  \item \textbf{H2}: the DM rule has fewer harmful swaps than \(\tau=2\%\) at similar accuracy.
+  \item \textbf{H3}: longer validation windows reduce harmful swaps.
+\end{itemize}
+
+% ---------------------------------------------------------------------------------------------
+\section{Results}
+
+\ResultsPending
+
+% ---------------------------------------------------------------------------------------------
+\section{Discussion and Limitations}
+
+\ResultsPending
+
+\textbf{Limitations.}
+\begin{itemize}
+  \item One city and six candidates. The candidate pool fixes how much the challenger's score is
+        inflated by being the best of several, so larger pools would likely need stricter rules.
+  \item The CAMS series are model estimates. The station series is real but older, and its replay
+        year includes the COVID-19 lockdown, which we keep as a stress test.
+  \item Hyperparameters were tuned on CAMS only.
+  \item 52 decisions per setting give few swaps, so the harmful-swap counts are descriptive.
+\end{itemize}
+
+% ---------------------------------------------------------------------------------------------
+\section{Conclusion}
+
+\ResultsPending
+
+\section*{Reproducibility}
+Code, DVC pipeline, protocol and MLflow tracking setup: \url{REPO_URL}. All tables and figures
+are regenerated by \texttt{dvc repro}; numbers in the text are read from the generated
+\texttt{numbers.tex}.
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}
