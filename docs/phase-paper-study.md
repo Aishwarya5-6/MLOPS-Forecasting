@@ -3,8 +3,8 @@
 **Dates:** 27 Nov 2026
 **Status:** All results computed, and the paper is fully drafted ([paper/main.tex](../paper/main.tex)). Not yet compiled: there is no LaTeX on this machine, so use Overleaf or `brew install tectonic`.
 **Protocol:** [study-protocol.md](study-protocol.md):
-- pre-registered in commit `16763c4`
-- deviation D1 (cities, before any results) in `4463cbd`
+- pre-registered in commit `9f5db7a`
+- deviation D1 (cities, before any results) in `73e9196`
 - deviation D2 (analysis details, after results) in this commit
 
 ## Question

@@ -102,7 +102,7 @@ The loading code was the same each time: `mlflow.pyfunc.load_model("models:/pm25
 
 - `src/models/ensemble.py` `EnsembleModel(members, weights=None)`: fits every member on the same training data and returns the weighted average of their forecasts. `weights=None` means equal weights.
 - `configs/ensemble.yaml` lists members as `{model, config}` pairs. `train.py` builds each member with the same `build_model()`, so any model type can be a member.
-- Run `ens-xgbtuned-sarima` (`dd2479f418d04f55bf8330fb3f18db6f`), clean commit `0e805c6`:
+- Run `ens-xgbtuned-sarima` (`dd2479f418d04f55bf8330fb3f18db6f`), clean commit `a168254`:
   - CV MAE 6.00, RMSE 7.964, sMAPE 22.8
   - fold RMSEs 7.76 / 10.81 / 9.05 / 8.07 / 4.14
   - 29 s to evaluate

@@ -12,7 +12,7 @@ An end-to-end MLOps platform that forecasts Hyderabad air quality (PM2.5). The p
 
 - **Design:** 52 weekly promotion decisions are replayed per dataset, on 5 datasets: Hyderabad (CAMS estimates) and CPCB measurements for Hyderabad, Delhi, Bengaluru and Chennai. Each decision is judged on the following, unseen week.
 - **Rules compared:** thresholds of 0–10%, a Diebold–Mariano test rule and never-switch, each with 7-, 14- and 30-day validation windows.
-- **Pre-registration:** the protocol was fixed before any result: [docs/study-protocol.md](docs/study-protocol.md), first commit `16763c4`, with all later deviations recorded in the same file.
+- **Pre-registration:** the protocol was fixed before any result: [docs/study-protocol.md](docs/study-protocol.md), first commit `9f5db7a`, with all later deviations recorded in the same file.
 - **Main finding:** promoting on any improvement swapped the model 30–44 times a year, and 36–55% of those swaps made the next week worse. A 2–5% threshold on a 30-day window removed most swaps with no measurable loss in accuracy.
 
 **Reproduce the paper's numbers, tables and figures:**

@@ -25,7 +25,7 @@ A clean, working project skeleton with MLflow running locally.
 | Start MLflow server with SQLite backend | ✅ | `http://127.0.0.1:5000` |
 | Write `src/train.py` with `argparse` | ✅ | `--model`, `--config` |
 | Log a dummy run to MLflow | ✅ | Experiment `forecasting-dev`, run `dummy-connection-test` |
-| First commit: "Project skeleton" | ✅ | Commit `8cf43cf`, pushed to `origin/main` |
+| First commit: "Project skeleton" | ✅ | Commit `2f62c7c`, pushed to `origin/main` |
 
 ## Environment decisions
 

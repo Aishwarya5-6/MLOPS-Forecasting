@@ -146,7 +146,7 @@ python -m src.sweep sweeps/xgb.yaml [--trials 40]
    **Keep in mind for Part 3:** a single API process must never load an XGBoost and an LSTM model together. One serving process should serve one model type.
 2. **The laptop slept during the first LSTM runs.** Two of them showed wall times of 6,918 s and 3,776 s, although they used only about 15 minutes of CPU. Only `eval_seconds` was affected, not the metrics. **Fix:** long jobs now run under **`caffeinate -i`**, a macOS command that prevents idle sleep (e.g. `caffeinate -i python -m src.sweep sweeps/xgb.yaml`).
 3. **The first LSTM runs were tagged `git_dirty=true`.** I was editing sweep files while they trained, and `log_run()` checks git at the *end* of a run. Their LSTM code was in the tagged commit, so the results were valid, but the record wasn't clean.
-   - **Resolution:** all 3 were **rerun from a clean commit (`9ece807`) under `caffeinate`**.
+   - **Resolution:** all 3 were **rerun from a clean commit (`fb1c727`) under `caffeinate`**.
    - The reruns are `git_dirty=false`, with realistic times, and their metrics are **identical to 6 decimal places**.
    - The old runs are tagged `stage=superseded` and `superseded_by=<new run id>`. The new runs are tagged `reproduces=<old run id>`. The old runs were kept, not deleted, so the history stays complete.
 
