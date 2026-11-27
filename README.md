@@ -2,9 +2,37 @@
 
 An end-to-end MLOps platform that forecasts Hyderabad air quality (PM2.5). The pipeline is reproducible, every run is tracked, and models are promoted through a registry. The full plan is in [docs/project-plan.md](docs/project-plan.md).
 
-**Status:** Part 1, Phase 5 complete: automated champion/challenger promotion with `promote.py`. Phase notes: [Phase 0](docs/phase-0-setup.md), [Phase 1](docs/phase-1-data.md), [Phase 2](docs/phase-2-evaluation.md), [Phase 3](docs/phase-3-mlflow-models.md), [Phase 4](docs/phase-4-lstm-sweep.md), [Phase 5](docs/phase-5-registry.md).
+**Status:** Part 1, Phase 5 complete (automated champion/challenger promotion with `promote.py`), plus a pre-registered study of promotion rules written up as a paper ([below](#paper)). Phase notes: [Phase 0](docs/phase-0-setup.md), [Phase 1](docs/phase-1-data.md), [Phase 2](docs/phase-2-evaluation.md), [Phase 3](docs/phase-3-mlflow-models.md), [Phase 4](docs/phase-4-lstm-sweep.md), [Phase 5](docs/phase-5-registry.md), [Paper study](docs/phase-paper-study.md).
 
-**Data:** hourly PM2.5 for Hyderabad from the [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api) (CAMS model estimates, CC BY 4.0), Aug 2022 onward.
+**Data:** hourly PM2.5 from two sources; see [Data and attribution](#data-and-attribution).
+
+## Paper
+
+**How Strict Should Automated Model Promotion Be? A Replay Study of Champion–Challenger Rules for PM2.5 Forecasting.** The question: when a newly trained model scores better on recent data, how much better must it be before it replaces the production model?
+
+- **Design:** 52 weekly promotion decisions are replayed per dataset, on 5 datasets: Hyderabad (CAMS estimates) and CPCB measurements for Hyderabad, Delhi, Bengaluru and Chennai. Each decision is judged on the following, unseen week.
+- **Rules compared:** thresholds of 0–10%, a Diebold–Mariano test rule and never-switch, each with 7-, 14- and 30-day validation windows.
+- **Pre-registration:** the protocol was fixed before any result: [docs/study-protocol.md](docs/study-protocol.md), first commit `16763c4`, with all later deviations recorded in the same file.
+- **Main finding:** promoting on any improvement swapped the model 30–44 times a year, and 36–55% of those swaps made the next week worse. A 2–5% threshold on a 30-day window removed most swaps with no measurable loss in accuracy.
+
+**Reproduce the paper's numbers, tables and figures:**
+
+```bash
+dvc pull      # data and forecast caches (see Data and attribution for the CPCB file)
+dvc repro     # caches -> replays -> hypothesis scoring -> paper/figures, paper/tables, paper/numbers.tex
+```
+
+The LaTeX source is in [paper/](paper/). Every number in the text is a macro from the generated `paper/numbers.tex`. Set `\extendedtrue` / `\extendedfalse` at the top of `paper/main.tex` for the extended or the conference version.
+
+## Data and attribution
+
+| Dataset | Source | Licence | Used for |
+| --- | --- | --- | --- |
+| Hyderabad PM2.5, Aug 2022 – Nov 2026 | [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api), CAMS global atmospheric-composition model estimates | CC BY 4.0 | Platform (Phases 1–5) and the paper's CAMS dataset |
+| City-level PM2.5 for Hyderabad, Delhi, Bengaluru, Chennai, 2015–2020 | [Air Quality Data in India (2015–2020)](https://www.kaggle.com/datasets/rohanrao/air-quality-data-in-india), compiled from Central Pollution Control Board (CPCB) data | See the dataset page | The paper's CPCB datasets |
+
+- **CAMS attribution:** contains modified Copernicus Atmosphere Monitoring Service information, 2026. Neither the European Commission nor ECMWF is responsible for any use of this information. Data access is provided by [Open-Meteo](https://open-meteo.com/).
+- **CPCB data:** download `city_hour.csv` from the Kaggle page above, save it to `data/raw/station/city_hour.csv`, then run `dvc repro`. Please respect the dataset's licence and credit CPCB and the dataset's compiler when you use it.
 
 ## Setup
 
@@ -96,3 +124,7 @@ python -m src.sweep sweeps/xgb.yaml                     # Optuna sweep, nested M
 python -m src.promote challenger --run-id <run_id>      # try to promote the run
 pytest && ruff check .
 ```
+
+## Licence
+
+Code: [MIT](LICENSE). The data sources keep their own licences; see [Data and attribution](#data-and-attribution).
