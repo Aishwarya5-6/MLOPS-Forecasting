@@ -1,0 +1,129 @@
+{
+ "per_dataset": {
+  "cams": {
+   "H1": {
+    "7": true,
+    "14": false,
+    "30": true
+   },
+   "H2": {
+    "7": false,
+    "14": false,
+    "30": false
+   },
+   "H3": {
+    "tau0": false,
+    "tau1": true,
+    "tau2": true
+   }
+  },
+  "station": {
+   "H1": {
+    "7": true,
+    "14": true,
+    "30": false
+   },
+   "H2": {
+    "7": false,
+    "14": false,
+    "30": false
+   },
+   "H3": {
+    "tau0": true,
+    "tau1": false,
+    "tau2": false
+   }
+  },
+  "station_nolstm": {
+   "H1": {
+    "7": true,
+    "14": true,
+    "30": true
+   },
+   "H2": {
+    "7": true,
+    "14": false,
+    "30": false
+   },
+   "H3": {
+    "tau0": true,
+    "tau1": false,
+    "tau2": true
+   }
+  },
+  "station_delhi": {
+   "H1": {
+    "7": true,
+    "14": true,
+    "30": true
+   },
+   "H2": {
+    "7": false,
+    "14": false,
+    "30": false
+   },
+   "H3": {
+    "tau0": true,
+    "tau1": true,
+    "tau2": true
+   }
+  },
+  "station_bengaluru": {
+   "H1": {
+    "7": true,
+    "14": true,
+    "30": true
+   },
+   "H2": {
+    "7": true,
+    "14": true,
+    "30": true
+   },
+   "H3": {
+    "tau0": true,
+    "tau1": true,
+    "tau2": true
+   }
+  },
+  "station_chennai": {
+   "H1": {
+    "7": true,
+    "14": true,
+    "30": true
+   },
+   "H2": {
+    "7": true,
+    "14": true,
+    "30": false
+   },
+   "H3": {
+    "tau0": true,
+    "tau1": true,
+    "tau2": true
+   }
+  }
+ },
+ "summary": {
+  "H1": {
+   "holds": 13,
+   "fails": 2,
+   "undefined": 0,
+   "cells": 15
+  },
+  "H2": {
+   "holds": 5,
+   "fails": 10,
+   "undefined": 0,
+   "cells": 15
+  },
+  "H3": {
+   "holds": 12,
+   "fails": 3,
+   "undefined": 0,
+   "cells": 15
+  }
+ },
+ "controls": [
+  "station_nolstm"
+ ]
+}

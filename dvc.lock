@@ -237,3 +237,1247 @@ stages:
       hash: md5
       md5: 173140abde59a4162f30208c6e93e04e
       size: 502658
+  study_cache@cams:
+    cmd: python -m src.study.cache --dataset cams
+    deps:
+    - path: configs
+      hash: md5
+      md5: 0b4fbf467a5945a1e75efa97fbb01e4d.dir
+      size: 2143
+      nfiles: 8
+    - path: data/processed/pm25_hourly.parquet
+      hash: md5
+      md5: 07cc1295de0c7c27da9ac21873de8486
+      size: 385210
+    - path: src/features.py
+      hash: md5
+      md5: 37cd4ec140484e119a43ec33be5613e2
+      size: 4673
+    - path: src/models
+      hash: md5
+      md5: 16251a6f92a4438a79d38f7801e9c3f9.dir
+      size: 57954
+      nfiles: 16
+    - path: src/study/cache.py
+      hash: md5
+      md5: 0a03d96bd1355224b68d3185c60c5b77
+      size: 6930
+    - path: src/train.py
+      hash: md5
+      md5: 82a211e26a5dbb0378bb7a827046139a
+      size: 6774
+    params:
+      params.yaml:
+        forecast.horizon: 24
+        seed: 42
+        study.candidates:
+          snaive:
+            model: seasonal_naive
+            config: configs/seasonal_naive.yaml
+          sarima:
+            model: sarima
+            config: configs/sarima.yaml
+          xgb:
+            model: xgb
+            config: configs/xgb.yaml
+            set:
+              log_target: true
+          xgb_tuned:
+            model: xgb
+            config: configs/xgb_tuned.yaml
+          lstm:
+            model: lstm
+            config: configs/lstm.yaml
+            set:
+              num_layers: 2
+        study.dataset_candidates:
+          station_delhi:
+          - snaive
+          - sarima
+          - xgb
+          - xgb_tuned
+          station_bengaluru:
+          - snaive
+          - sarima
+          - xgb
+          - xgb_tuned
+          station_chennai:
+          - snaive
+          - sarima
+          - xgb
+          - xgb_tuned
+        study.datasets:
+          cams: data/processed/pm25_hourly.parquet
+          station: data/processed/station_pm25_hourly.parquet
+          station_delhi: data/processed/station_delhi.parquet
+          station_bengaluru: data/processed/station_bengaluru.parquet
+          station_chennai: data/processed/station_chennai.parquet
+        study.lstm_threads: 4
+        study.max_window_days: 30
+        study.refit_every_days: 30
+        study.replay_days: 365
+    outs:
+    - path: data/study/cams
+      hash: md5
+      md5: 1360dd1fb9716a5a85b9b63a12f4c3ac.dir
+      size: 440128
+      nfiles: 5
+  study_replay@cams:
+    cmd: python -m src.study.replay --replay cams
+    deps:
+    - path: data/processed/pm25_hourly.parquet
+      hash: md5
+      md5: 07cc1295de0c7c27da9ac21873de8486
+      size: 385210
+    - path: data/study/cams
+      hash: md5
+      md5: 1360dd1fb9716a5a85b9b63a12f4c3ac.dir
+      size: 440128
+      nfiles: 5
+    - path: src/promote.py
+      hash: md5
+      md5: 7269961881aa2df606fc47da070235e7
+      size: 15414
+    - path: src/study/policies.py
+      hash: md5
+      md5: ceca4406cf94edeaf3d77d090bd5fd91
+      size: 1961
+    - path: src/study/replay.py
+      hash: md5
+      md5: 45cdb6a1fcc28c651cd058e42c381db7
+      size: 8877
+    - path: src/study/stats.py
+      hash: md5
+      md5: 8d5b1e3f4065bfc120f2f2953409471b
+      size: 2274
+    params:
+      params.yaml:
+        seed: 42
+        study:
+          datasets:
+            cams: data/processed/pm25_hourly.parquet
+            station: data/processed/station_pm25_hourly.parquet
+            station_delhi: data/processed/station_delhi.parquet
+            station_bengaluru: data/processed/station_bengaluru.parquet
+            station_chennai: data/processed/station_chennai.parquet
+          dataset_candidates:
+            station_delhi:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+            station_bengaluru:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+            station_chennai:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+          replays:
+            cams:
+              cache: cams
+            station:
+              cache: station
+            station_nolstm:
+              cache: station
+              candidates:
+              - snaive
+              - sarima
+              - xgb
+              - xgb_tuned
+            station_delhi:
+              cache: station_delhi
+            station_bengaluru:
+              cache: station_bengaluru
+            station_chennai:
+              cache: station_chennai
+          lstm_threads: 4
+          replay_days: 365
+          max_window_days: 30
+          refit_every_days: 30
+          decide_every_days: 7
+          n_decisions: 52
+          candidates:
+            snaive:
+              model: seasonal_naive
+              config: configs/seasonal_naive.yaml
+            sarima:
+              model: sarima
+              config: configs/sarima.yaml
+            xgb:
+              model: xgb
+              config: configs/xgb.yaml
+              set:
+                log_target: true
+            xgb_tuned:
+              model: xgb
+              config: configs/xgb_tuned.yaml
+            lstm:
+              model: lstm
+              config: configs/lstm.yaml
+              set:
+                num_layers: 2
+          derived:
+            ensemble:
+            - xgb_tuned
+            - sarima
+          thresholds:
+          - 0.0
+          - 0.01
+          - 0.02
+          - 0.05
+          - 0.1
+          windows:
+          - 7
+          - 14
+          - 30
+          dm_alpha: 0.05
+          min_valid_fraction: 0.5
+          init_window_days: 30
+          bootstrap_n: 2000
+    outs:
+    - path: reports/study/cams/results.json
+      hash: md5
+      md5: 81eff15f2e752dd7b95c6829740322af
+      size: 91467
+    - path: reports/study/cams/summary.csv
+      hash: md5
+      md5: 8d2bb57b5858d6237bdbac6cddeab121
+      size: 1259
+  study_cache@station:
+    cmd: python -m src.study.cache --dataset station
+    deps:
+    - path: configs
+      hash: md5
+      md5: 0b4fbf467a5945a1e75efa97fbb01e4d.dir
+      size: 2143
+      nfiles: 8
+    - path: data/processed/station_pm25_hourly.parquet
+      hash: md5
+      md5: 173140abde59a4162f30208c6e93e04e
+      size: 502658
+    - path: src/features.py
+      hash: md5
+      md5: 37cd4ec140484e119a43ec33be5613e2
+      size: 4673
+    - path: src/models
+      hash: md5
+      md5: 16251a6f92a4438a79d38f7801e9c3f9.dir
+      size: 57954
+      nfiles: 16
+    - path: src/study/cache.py
+      hash: md5
+      md5: 0a03d96bd1355224b68d3185c60c5b77
+      size: 6930
+    - path: src/train.py
+      hash: md5
+      md5: 82a211e26a5dbb0378bb7a827046139a
+      size: 6774
+    params:
+      params.yaml:
+        forecast.horizon: 24
+        seed: 42
+        study.candidates:
+          snaive:
+            model: seasonal_naive
+            config: configs/seasonal_naive.yaml
+          sarima:
+            model: sarima
+            config: configs/sarima.yaml
+          xgb:
+            model: xgb
+            config: configs/xgb.yaml
+            set:
+              log_target: true
+          xgb_tuned:
+            model: xgb
+            config: configs/xgb_tuned.yaml
+          lstm:
+            model: lstm
+            config: configs/lstm.yaml
+            set:
+              num_layers: 2
+        study.dataset_candidates:
+          station_delhi:
+          - snaive
+          - sarima
+          - xgb
+          - xgb_tuned
+          station_bengaluru:
+          - snaive
+          - sarima
+          - xgb
+          - xgb_tuned
+          station_chennai:
+          - snaive
+          - sarima
+          - xgb
+          - xgb_tuned
+        study.datasets:
+          cams: data/processed/pm25_hourly.parquet
+          station: data/processed/station_pm25_hourly.parquet
+          station_delhi: data/processed/station_delhi.parquet
+          station_bengaluru: data/processed/station_bengaluru.parquet
+          station_chennai: data/processed/station_chennai.parquet
+        study.lstm_threads: 4
+        study.max_window_days: 30
+        study.refit_every_days: 30
+        study.replay_days: 365
+    outs:
+    - path: data/study/station
+      hash: md5
+      md5: c4ababb3f6644a15f90def619916e6b1.dir
+      size: 517317
+      nfiles: 5
+  study_cache@station_delhi:
+    cmd: python -m src.study.cache --dataset station_delhi
+    deps:
+    - path: configs
+      hash: md5
+      md5: 0b4fbf467a5945a1e75efa97fbb01e4d.dir
+      size: 2143
+      nfiles: 8
+    - path: data/processed/station_delhi.parquet
+      hash: md5
+      md5: 4c4fd374c720bc12ed8743ed70ea8402
+      size: 616510
+    - path: src/features.py
+      hash: md5
+      md5: 37cd4ec140484e119a43ec33be5613e2
+      size: 4673
+    - path: src/models
+      hash: md5
+      md5: 16251a6f92a4438a79d38f7801e9c3f9.dir
+      size: 57954
+      nfiles: 16
+    - path: src/study/cache.py
+      hash: md5
+      md5: 0a03d96bd1355224b68d3185c60c5b77
+      size: 6930
+    - path: src/train.py
+      hash: md5
+      md5: 82a211e26a5dbb0378bb7a827046139a
+      size: 6774
+    params:
+      params.yaml:
+        forecast.horizon: 24
+        seed: 42
+        study.candidates:
+          snaive:
+            model: seasonal_naive
+            config: configs/seasonal_naive.yaml
+          sarima:
+            model: sarima
+            config: configs/sarima.yaml
+          xgb:
+            model: xgb
+            config: configs/xgb.yaml
+            set:
+              log_target: true
+          xgb_tuned:
+            model: xgb
+            config: configs/xgb_tuned.yaml
+          lstm:
+            model: lstm
+            config: configs/lstm.yaml
+            set:
+              num_layers: 2
+        study.dataset_candidates:
+          station_delhi:
+          - snaive
+          - sarima
+          - xgb
+          - xgb_tuned
+          station_bengaluru:
+          - snaive
+          - sarima
+          - xgb
+          - xgb_tuned
+          station_chennai:
+          - snaive
+          - sarima
+          - xgb
+          - xgb_tuned
+        study.datasets:
+          cams: data/processed/pm25_hourly.parquet
+          station: data/processed/station_pm25_hourly.parquet
+          station_delhi: data/processed/station_delhi.parquet
+          station_bengaluru: data/processed/station_bengaluru.parquet
+          station_chennai: data/processed/station_chennai.parquet
+        study.lstm_threads: 4
+        study.max_window_days: 30
+        study.refit_every_days: 30
+        study.replay_days: 365
+    outs:
+    - path: data/study/station_delhi
+      hash: md5
+      md5: 7b33f84d0e22751569c19d495150b642.dir
+      size: 515000
+      nfiles: 4
+  study_cache@station_bengaluru:
+    cmd: python -m src.study.cache --dataset station_bengaluru
+    deps:
+    - path: configs
+      hash: md5
+      md5: 0b4fbf467a5945a1e75efa97fbb01e4d.dir
+      size: 2143
+      nfiles: 8
+    - path: data/processed/station_bengaluru.parquet
+      hash: md5
+      md5: 9f26a76cab734f84dec7d0715d3c1f4a
+      size: 528056
+    - path: src/features.py
+      hash: md5
+      md5: 37cd4ec140484e119a43ec33be5613e2
+      size: 4673
+    - path: src/models
+      hash: md5
+      md5: 16251a6f92a4438a79d38f7801e9c3f9.dir
+      size: 57954
+      nfiles: 16
+    - path: src/study/cache.py
+      hash: md5
+      md5: 0a03d96bd1355224b68d3185c60c5b77
+      size: 6930
+    - path: src/train.py
+      hash: md5
+      md5: 82a211e26a5dbb0378bb7a827046139a
+      size: 6774
+    params:
+      params.yaml:
+        forecast.horizon: 24
+        seed: 42
+        study.candidates:
+          snaive:
+            model: seasonal_naive
+            config: configs/seasonal_naive.yaml
+          sarima:
+            model: sarima
+            config: configs/sarima.yaml
+          xgb:
+            model: xgb
+            config: configs/xgb.yaml
+            set:
+              log_target: true
+          xgb_tuned:
+            model: xgb
+            config: configs/xgb_tuned.yaml
+          lstm:
+            model: lstm
+            config: configs/lstm.yaml
+            set:
+              num_layers: 2
+        study.dataset_candidates:
+          station_delhi:
+          - snaive
+          - sarima
+          - xgb
+          - xgb_tuned
+          station_bengaluru:
+          - snaive
+          - sarima
+          - xgb
+          - xgb_tuned
+          station_chennai:
+          - snaive
+          - sarima
+          - xgb
+          - xgb_tuned
+        study.datasets:
+          cams: data/processed/pm25_hourly.parquet
+          station: data/processed/station_pm25_hourly.parquet
+          station_delhi: data/processed/station_delhi.parquet
+          station_bengaluru: data/processed/station_bengaluru.parquet
+          station_chennai: data/processed/station_chennai.parquet
+        study.lstm_threads: 4
+        study.max_window_days: 30
+        study.refit_every_days: 30
+        study.replay_days: 365
+    outs:
+    - path: data/study/station_bengaluru
+      hash: md5
+      md5: 5d9fac527d426fa013b1ad714c5b8ce2.dir
+      size: 441770
+      nfiles: 4
+  study_cache@station_chennai:
+    cmd: python -m src.study.cache --dataset station_chennai
+    deps:
+    - path: configs
+      hash: md5
+      md5: 0b4fbf467a5945a1e75efa97fbb01e4d.dir
+      size: 2143
+      nfiles: 8
+    - path: data/processed/station_chennai.parquet
+      hash: md5
+      md5: f2707256c79263f6d40617c583edcb29
+      size: 541303
+    - path: src/features.py
+      hash: md5
+      md5: 37cd4ec140484e119a43ec33be5613e2
+      size: 4673
+    - path: src/models
+      hash: md5
+      md5: 16251a6f92a4438a79d38f7801e9c3f9.dir
+      size: 57954
+      nfiles: 16
+    - path: src/study/cache.py
+      hash: md5
+      md5: 0a03d96bd1355224b68d3185c60c5b77
+      size: 6930
+    - path: src/train.py
+      hash: md5
+      md5: 82a211e26a5dbb0378bb7a827046139a
+      size: 6774
+    params:
+      params.yaml:
+        forecast.horizon: 24
+        seed: 42
+        study.candidates:
+          snaive:
+            model: seasonal_naive
+            config: configs/seasonal_naive.yaml
+          sarima:
+            model: sarima
+            config: configs/sarima.yaml
+          xgb:
+            model: xgb
+            config: configs/xgb.yaml
+            set:
+              log_target: true
+          xgb_tuned:
+            model: xgb
+            config: configs/xgb_tuned.yaml
+          lstm:
+            model: lstm
+            config: configs/lstm.yaml
+            set:
+              num_layers: 2
+        study.dataset_candidates:
+          station_delhi:
+          - snaive
+          - sarima
+          - xgb
+          - xgb_tuned
+          station_bengaluru:
+          - snaive
+          - sarima
+          - xgb
+          - xgb_tuned
+          station_chennai:
+          - snaive
+          - sarima
+          - xgb
+          - xgb_tuned
+        study.datasets:
+          cams: data/processed/pm25_hourly.parquet
+          station: data/processed/station_pm25_hourly.parquet
+          station_delhi: data/processed/station_delhi.parquet
+          station_bengaluru: data/processed/station_bengaluru.parquet
+          station_chennai: data/processed/station_chennai.parquet
+        study.lstm_threads: 4
+        study.max_window_days: 30
+        study.refit_every_days: 30
+        study.replay_days: 365
+    outs:
+    - path: data/study/station_chennai
+      hash: md5
+      md5: 60aa2bf0e86bc2f012d370468d9e21a0.dir
+      size: 459142
+      nfiles: 4
+  study_replay@station:
+    cmd: python -m src.study.replay --replay station
+    deps:
+    - path: data/processed/station_pm25_hourly.parquet
+      hash: md5
+      md5: 173140abde59a4162f30208c6e93e04e
+      size: 502658
+    - path: data/study/station
+      hash: md5
+      md5: c4ababb3f6644a15f90def619916e6b1.dir
+      size: 517317
+      nfiles: 5
+    - path: src/promote.py
+      hash: md5
+      md5: 7269961881aa2df606fc47da070235e7
+      size: 15414
+    - path: src/study/policies.py
+      hash: md5
+      md5: ceca4406cf94edeaf3d77d090bd5fd91
+      size: 1961
+    - path: src/study/replay.py
+      hash: md5
+      md5: 45cdb6a1fcc28c651cd058e42c381db7
+      size: 8877
+    - path: src/study/stats.py
+      hash: md5
+      md5: 8d5b1e3f4065bfc120f2f2953409471b
+      size: 2274
+    params:
+      params.yaml:
+        seed: 42
+        study:
+          datasets:
+            cams: data/processed/pm25_hourly.parquet
+            station: data/processed/station_pm25_hourly.parquet
+            station_delhi: data/processed/station_delhi.parquet
+            station_bengaluru: data/processed/station_bengaluru.parquet
+            station_chennai: data/processed/station_chennai.parquet
+          dataset_candidates:
+            station_delhi:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+            station_bengaluru:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+            station_chennai:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+          replays:
+            cams:
+              cache: cams
+            station:
+              cache: station
+            station_nolstm:
+              cache: station
+              candidates:
+              - snaive
+              - sarima
+              - xgb
+              - xgb_tuned
+            station_delhi:
+              cache: station_delhi
+            station_bengaluru:
+              cache: station_bengaluru
+            station_chennai:
+              cache: station_chennai
+          lstm_threads: 4
+          replay_days: 365
+          max_window_days: 30
+          refit_every_days: 30
+          decide_every_days: 7
+          n_decisions: 52
+          candidates:
+            snaive:
+              model: seasonal_naive
+              config: configs/seasonal_naive.yaml
+            sarima:
+              model: sarima
+              config: configs/sarima.yaml
+            xgb:
+              model: xgb
+              config: configs/xgb.yaml
+              set:
+                log_target: true
+            xgb_tuned:
+              model: xgb
+              config: configs/xgb_tuned.yaml
+            lstm:
+              model: lstm
+              config: configs/lstm.yaml
+              set:
+                num_layers: 2
+          derived:
+            ensemble:
+            - xgb_tuned
+            - sarima
+          thresholds:
+          - 0.0
+          - 0.01
+          - 0.02
+          - 0.05
+          - 0.1
+          windows:
+          - 7
+          - 14
+          - 30
+          dm_alpha: 0.05
+          min_valid_fraction: 0.5
+          init_window_days: 30
+          bootstrap_n: 2000
+    outs:
+    - path: reports/study/station/results.json
+      hash: md5
+      md5: bd7b0dd47bfea5a4927c4c260be180a5
+      size: 90259
+    - path: reports/study/station/summary.csv
+      hash: md5
+      md5: 7327d2c906bd603b6c9394e3227570ee
+      size: 1279
+  study_replay@station_nolstm:
+    cmd: python -m src.study.replay --replay station_nolstm
+    deps:
+    - path: data/processed/station_pm25_hourly.parquet
+      hash: md5
+      md5: 173140abde59a4162f30208c6e93e04e
+      size: 502658
+    - path: data/study/station
+      hash: md5
+      md5: c4ababb3f6644a15f90def619916e6b1.dir
+      size: 517317
+      nfiles: 5
+    - path: src/promote.py
+      hash: md5
+      md5: 7269961881aa2df606fc47da070235e7
+      size: 15414
+    - path: src/study/policies.py
+      hash: md5
+      md5: ceca4406cf94edeaf3d77d090bd5fd91
+      size: 1961
+    - path: src/study/replay.py
+      hash: md5
+      md5: 45cdb6a1fcc28c651cd058e42c381db7
+      size: 8877
+    - path: src/study/stats.py
+      hash: md5
+      md5: 8d5b1e3f4065bfc120f2f2953409471b
+      size: 2274
+    params:
+      params.yaml:
+        seed: 42
+        study:
+          datasets:
+            cams: data/processed/pm25_hourly.parquet
+            station: data/processed/station_pm25_hourly.parquet
+            station_delhi: data/processed/station_delhi.parquet
+            station_bengaluru: data/processed/station_bengaluru.parquet
+            station_chennai: data/processed/station_chennai.parquet
+          dataset_candidates:
+            station_delhi:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+            station_bengaluru:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+            station_chennai:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+          replays:
+            cams:
+              cache: cams
+            station:
+              cache: station
+            station_nolstm:
+              cache: station
+              candidates:
+              - snaive
+              - sarima
+              - xgb
+              - xgb_tuned
+            station_delhi:
+              cache: station_delhi
+            station_bengaluru:
+              cache: station_bengaluru
+            station_chennai:
+              cache: station_chennai
+          lstm_threads: 4
+          replay_days: 365
+          max_window_days: 30
+          refit_every_days: 30
+          decide_every_days: 7
+          n_decisions: 52
+          candidates:
+            snaive:
+              model: seasonal_naive
+              config: configs/seasonal_naive.yaml
+            sarima:
+              model: sarima
+              config: configs/sarima.yaml
+            xgb:
+              model: xgb
+              config: configs/xgb.yaml
+              set:
+                log_target: true
+            xgb_tuned:
+              model: xgb
+              config: configs/xgb_tuned.yaml
+            lstm:
+              model: lstm
+              config: configs/lstm.yaml
+              set:
+                num_layers: 2
+          derived:
+            ensemble:
+            - xgb_tuned
+            - sarima
+          thresholds:
+          - 0.0
+          - 0.01
+          - 0.02
+          - 0.05
+          - 0.1
+          windows:
+          - 7
+          - 14
+          - 30
+          dm_alpha: 0.05
+          min_valid_fraction: 0.5
+          init_window_days: 30
+          bootstrap_n: 2000
+    outs:
+    - path: reports/study/station_nolstm/results.json
+      hash: md5
+      md5: 20c047d48d6bdc14eaf3da71e57971b8
+      size: 89128
+    - path: reports/study/station_nolstm/summary.csv
+      hash: md5
+      md5: debc7f2e5ffd4cd31604ad395315a9fd
+      size: 1285
+  study_replay@station_delhi:
+    cmd: python -m src.study.replay --replay station_delhi
+    deps:
+    - path: data/processed/station_delhi.parquet
+      hash: md5
+      md5: 4c4fd374c720bc12ed8743ed70ea8402
+      size: 616510
+    - path: data/study/station_delhi
+      hash: md5
+      md5: 7b33f84d0e22751569c19d495150b642.dir
+      size: 515000
+      nfiles: 4
+    - path: src/promote.py
+      hash: md5
+      md5: 7269961881aa2df606fc47da070235e7
+      size: 15414
+    - path: src/study/policies.py
+      hash: md5
+      md5: ceca4406cf94edeaf3d77d090bd5fd91
+      size: 1961
+    - path: src/study/replay.py
+      hash: md5
+      md5: 45cdb6a1fcc28c651cd058e42c381db7
+      size: 8877
+    - path: src/study/stats.py
+      hash: md5
+      md5: 8d5b1e3f4065bfc120f2f2953409471b
+      size: 2274
+    params:
+      params.yaml:
+        seed: 42
+        study:
+          datasets:
+            cams: data/processed/pm25_hourly.parquet
+            station: data/processed/station_pm25_hourly.parquet
+            station_delhi: data/processed/station_delhi.parquet
+            station_bengaluru: data/processed/station_bengaluru.parquet
+            station_chennai: data/processed/station_chennai.parquet
+          dataset_candidates:
+            station_delhi:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+            station_bengaluru:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+            station_chennai:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+          replays:
+            cams:
+              cache: cams
+            station:
+              cache: station
+            station_nolstm:
+              cache: station
+              candidates:
+              - snaive
+              - sarima
+              - xgb
+              - xgb_tuned
+            station_delhi:
+              cache: station_delhi
+            station_bengaluru:
+              cache: station_bengaluru
+            station_chennai:
+              cache: station_chennai
+          lstm_threads: 4
+          replay_days: 365
+          max_window_days: 30
+          refit_every_days: 30
+          decide_every_days: 7
+          n_decisions: 52
+          candidates:
+            snaive:
+              model: seasonal_naive
+              config: configs/seasonal_naive.yaml
+            sarima:
+              model: sarima
+              config: configs/sarima.yaml
+            xgb:
+              model: xgb
+              config: configs/xgb.yaml
+              set:
+                log_target: true
+            xgb_tuned:
+              model: xgb
+              config: configs/xgb_tuned.yaml
+            lstm:
+              model: lstm
+              config: configs/lstm.yaml
+              set:
+                num_layers: 2
+          derived:
+            ensemble:
+            - xgb_tuned
+            - sarima
+          thresholds:
+          - 0.0
+          - 0.01
+          - 0.02
+          - 0.05
+          - 0.1
+          windows:
+          - 7
+          - 14
+          - 30
+          dm_alpha: 0.05
+          min_valid_fraction: 0.5
+          init_window_days: 30
+          bootstrap_n: 2000
+    outs:
+    - path: reports/study/station_delhi/results.json
+      hash: md5
+      md5: e843cca11e45e9d3864866939c4d37c9
+      size: 76784
+    - path: reports/study/station_delhi/summary.csv
+      hash: md5
+      md5: 1d2280a1049a9cec7e6c88336d70e916
+      size: 1277
+  study_replay@station_bengaluru:
+    cmd: python -m src.study.replay --replay station_bengaluru
+    deps:
+    - path: data/processed/station_bengaluru.parquet
+      hash: md5
+      md5: 9f26a76cab734f84dec7d0715d3c1f4a
+      size: 528056
+    - path: data/study/station_bengaluru
+      hash: md5
+      md5: 5d9fac527d426fa013b1ad714c5b8ce2.dir
+      size: 441770
+      nfiles: 4
+    - path: src/promote.py
+      hash: md5
+      md5: 7269961881aa2df606fc47da070235e7
+      size: 15414
+    - path: src/study/policies.py
+      hash: md5
+      md5: ceca4406cf94edeaf3d77d090bd5fd91
+      size: 1961
+    - path: src/study/replay.py
+      hash: md5
+      md5: 45cdb6a1fcc28c651cd058e42c381db7
+      size: 8877
+    - path: src/study/stats.py
+      hash: md5
+      md5: 8d5b1e3f4065bfc120f2f2953409471b
+      size: 2274
+    params:
+      params.yaml:
+        seed: 42
+        study:
+          datasets:
+            cams: data/processed/pm25_hourly.parquet
+            station: data/processed/station_pm25_hourly.parquet
+            station_delhi: data/processed/station_delhi.parquet
+            station_bengaluru: data/processed/station_bengaluru.parquet
+            station_chennai: data/processed/station_chennai.parquet
+          dataset_candidates:
+            station_delhi:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+            station_bengaluru:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+            station_chennai:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+          replays:
+            cams:
+              cache: cams
+            station:
+              cache: station
+            station_nolstm:
+              cache: station
+              candidates:
+              - snaive
+              - sarima
+              - xgb
+              - xgb_tuned
+            station_delhi:
+              cache: station_delhi
+            station_bengaluru:
+              cache: station_bengaluru
+            station_chennai:
+              cache: station_chennai
+          lstm_threads: 4
+          replay_days: 365
+          max_window_days: 30
+          refit_every_days: 30
+          decide_every_days: 7
+          n_decisions: 52
+          candidates:
+            snaive:
+              model: seasonal_naive
+              config: configs/seasonal_naive.yaml
+            sarima:
+              model: sarima
+              config: configs/sarima.yaml
+            xgb:
+              model: xgb
+              config: configs/xgb.yaml
+              set:
+                log_target: true
+            xgb_tuned:
+              model: xgb
+              config: configs/xgb_tuned.yaml
+            lstm:
+              model: lstm
+              config: configs/lstm.yaml
+              set:
+                num_layers: 2
+          derived:
+            ensemble:
+            - xgb_tuned
+            - sarima
+          thresholds:
+          - 0.0
+          - 0.01
+          - 0.02
+          - 0.05
+          - 0.1
+          windows:
+          - 7
+          - 14
+          - 30
+          dm_alpha: 0.05
+          min_valid_fraction: 0.5
+          init_window_days: 30
+          bootstrap_n: 2000
+    outs:
+    - path: reports/study/station_bengaluru/results.json
+      hash: md5
+      md5: 39ca5574bb147d69eeb4606186ac40e7
+      size: 79633
+    - path: reports/study/station_bengaluru/summary.csv
+      hash: md5
+      md5: 487fcfcaab964450655d31670060ecde
+      size: 1277
+  study_replay@station_chennai:
+    cmd: python -m src.study.replay --replay station_chennai
+    deps:
+    - path: data/processed/station_chennai.parquet
+      hash: md5
+      md5: f2707256c79263f6d40617c583edcb29
+      size: 541303
+    - path: data/study/station_chennai
+      hash: md5
+      md5: 60aa2bf0e86bc2f012d370468d9e21a0.dir
+      size: 459142
+      nfiles: 4
+    - path: src/promote.py
+      hash: md5
+      md5: 7269961881aa2df606fc47da070235e7
+      size: 15414
+    - path: src/study/policies.py
+      hash: md5
+      md5: ceca4406cf94edeaf3d77d090bd5fd91
+      size: 1961
+    - path: src/study/replay.py
+      hash: md5
+      md5: 45cdb6a1fcc28c651cd058e42c381db7
+      size: 8877
+    - path: src/study/stats.py
+      hash: md5
+      md5: 8d5b1e3f4065bfc120f2f2953409471b
+      size: 2274
+    params:
+      params.yaml:
+        seed: 42
+        study:
+          datasets:
+            cams: data/processed/pm25_hourly.parquet
+            station: data/processed/station_pm25_hourly.parquet
+            station_delhi: data/processed/station_delhi.parquet
+            station_bengaluru: data/processed/station_bengaluru.parquet
+            station_chennai: data/processed/station_chennai.parquet
+          dataset_candidates:
+            station_delhi:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+            station_bengaluru:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+            station_chennai:
+            - snaive
+            - sarima
+            - xgb
+            - xgb_tuned
+          replays:
+            cams:
+              cache: cams
+            station:
+              cache: station
+            station_nolstm:
+              cache: station
+              candidates:
+              - snaive
+              - sarima
+              - xgb
+              - xgb_tuned
+            station_delhi:
+              cache: station_delhi
+            station_bengaluru:
+              cache: station_bengaluru
+            station_chennai:
+              cache: station_chennai
+          lstm_threads: 4
+          replay_days: 365
+          max_window_days: 30
+          refit_every_days: 30
+          decide_every_days: 7
+          n_decisions: 52
+          candidates:
+            snaive:
+              model: seasonal_naive
+              config: configs/seasonal_naive.yaml
+            sarima:
+              model: sarima
+              config: configs/sarima.yaml
+            xgb:
+              model: xgb
+              config: configs/xgb.yaml
+              set:
+                log_target: true
+            xgb_tuned:
+              model: xgb
+              config: configs/xgb_tuned.yaml
+            lstm:
+              model: lstm
+              config: configs/lstm.yaml
+              set:
+                num_layers: 2
+          derived:
+            ensemble:
+            - xgb_tuned
+            - sarima
+          thresholds:
+          - 0.0
+          - 0.01
+          - 0.02
+          - 0.05
+          - 0.1
+          windows:
+          - 7
+          - 14
+          - 30
+          dm_alpha: 0.05
+          min_valid_fraction: 0.5
+          init_window_days: 30
+          bootstrap_n: 2000
+    outs:
+    - path: reports/study/station_chennai/results.json
+      hash: md5
+      md5: 046d4cfdfddfa08f658b03dd4a354149
+      size: 77933
+    - path: reports/study/station_chennai/summary.csv
+      hash: md5
+      md5: ca8d90264c9382eb56fb7b83f836e82c
+      size: 1269
+  study_hypotheses:
+    cmd: python -m src.study.hypotheses
+    deps:
+    - path: reports/study/cams/results.json
+      hash: md5
+      md5: 81eff15f2e752dd7b95c6829740322af
+      size: 91467
+    - path: reports/study/station/results.json
+      hash: md5
+      md5: bd7b0dd47bfea5a4927c4c260be180a5
+      size: 90259
+    - path: reports/study/station_bengaluru/results.json
+      hash: md5
+      md5: 39ca5574bb147d69eeb4606186ac40e7
+      size: 79633
+    - path: reports/study/station_chennai/results.json
+      hash: md5
+      md5: 046d4cfdfddfa08f658b03dd4a354149
+      size: 77933
+    - path: reports/study/station_delhi/results.json
+      hash: md5
+      md5: e843cca11e45e9d3864866939c4d37c9
+      size: 76784
+    - path: reports/study/station_nolstm/results.json
+      hash: md5
+      md5: 20c047d48d6bdc14eaf3da71e57971b8
+      size: 89128
+    - path: src/study/hypotheses.py
+      hash: md5
+      md5: 602f90321d9ff4d8f9eb1f85e711b996
+      size: 3179
+    params:
+      params.yaml:
+        study.windows:
+        - 7
+        - 14
+        - 30
+    outs:
+    - path: reports/study/hypotheses.json
+      hash: md5
+      md5: faf19622c71fdd5314dcd425d5988dde
+      size: 1654
+  study_figures:
+    cmd: python -m src.study.figures
+    deps:
+    - path: reports/study/hypotheses.json
+      hash: md5
+      md5: faf19622c71fdd5314dcd425d5988dde
+      size: 1654
+    - path: src/study/figures.py
+      hash: md5
+      md5: ea83a1f55e982087aea23d0d0e356291
+      size: 10780
+    params:
+      params.yaml:
+        study.windows:
+        - 7
+        - 14
+        - 30
+    outs:
+    - path: paper/figures
+      hash: md5
+      md5: 2b4a6571c645ee1e7211bc58cf67148b.dir
+      size: 74803
+      nfiles: 3
+    - path: paper/numbers.tex
+      hash: md5
+      md5: caf91b123250edaec8715b16728861c5
+      size: 109884

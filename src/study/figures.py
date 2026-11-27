@@ -61,31 +61,6 @@ def _frame(res: dict) -> pd.DataFrame:
     return pd.DataFrame(res["results"]).set_index(["policy", "window"])
 
 
-def fig_deployed_rmse(results: dict, windows) -> None:
-    fig, axes = plt.subplots(1, len(results), figsize=(3.5 * len(results), 2.4), squeeze=False)
-    for ax, (d, res) in zip(axes[0], results.items(), strict=True):
-        df = _frame(res)
-        x = np.arange(len(POLICY_ORDER))
-        width = 0.24
-        for i, v in enumerate(windows):
-            rmse = [df.loc[(p, v), "deployed_rmse"] for p in POLICY_ORDER]
-            lo = [df.loc[(p, v), "rmse_ci"][0] for p in POLICY_ORDER]
-            hi = [df.loc[(p, v), "rmse_ci"][1] for p in POLICY_ORDER]
-            xs = x + (i - 1) * width
-            ax.errorbar(xs, rmse, yerr=[np.subtract(rmse, lo), np.subtract(hi, rmse)], fmt="o",
-                        ms=4, lw=1, capsize=0, color=SLOTS[i], label=f"V = {v} d")  # fmt: skip
-        ax.axhline(res["oracle"]["deployed_rmse"], color=INK2, lw=1, ls="--")
-        ax.text(len(POLICY_ORDER) - 0.5, res["oracle"]["deployed_rmse"], "oracle", color=INK2,
-                ha="right", va="bottom", fontsize=7)  # fmt: skip
-        ax.set_xticks(x, [POLICY_LABEL[p] for p in POLICY_ORDER], rotation=30, ha="right")
-        ax.set_title(DATASET_LABEL.get(d, d), fontsize=8, color=INK)
-        ax.set_ylabel("deployed RMSE (µg/m³)")
-        ax.grid(axis="x", visible=False)
-    axes[0][0].legend(loc="upper left", fontsize=7, ncol=3)
-    fig.savefig(FIG_DIR / "deployed_rmse.pdf")
-    plt.close(fig)
-
-
 def fig_swaps(results: dict, windows) -> None:
     fig, axes = plt.subplots(len(results), len(windows), figsize=(7.2, 1.7 * len(results)),
                              sharey="row", squeeze=False)  # fmt: skip
@@ -143,9 +118,9 @@ def fig_timeline(results: dict, window: int) -> None:
 
 
 def fig_cities(results: dict, window: int) -> None:
-    """Every replay: each policy's deployed-RMSE change vs tau0 (with CI) and harmful-swap rate."""
+    """Every replay: each policy's deployed-RMSE change vs tau0 (paired CI) and harmful swaps."""
     names = list(results)
-    pols = [p for p in POLICY_ORDER if p != "tau0"]
+    pols = POLICY_ORDER  # tau0 included: zero by definition on top, the reference count below
     fig, axes = plt.subplots(2, 1, figsize=(7.2, 3.6), sharex=True)
     x = np.arange(len(pols))
     width = 0.8 / len(names)
@@ -159,12 +134,11 @@ def fig_cities(results: dict, window: int) -> None:
         axes[0].errorbar(xs, rel, yerr=[np.subtract(rel, ci_lo), np.subtract(ci_hi, rel)],
                          fmt="o", ms=3, lw=0.8, color=SLOTS[i],
                          label=DATASET_LABEL.get(d, d))  # fmt: skip
-        rate = [df.loc[(p, window), "harmful_rate"] for p in pols]
-        rate = [np.nan if r is None else 100 * r for r in rate]
-        axes[1].bar(xs, rate, width=width * 0.9, color=SLOTS[i])
+        harmful = [df.loc[(p, window), "harmful"] for p in pols]
+        axes[1].bar(xs, harmful, width=width * 0.9, color=SLOTS[i])
     axes[0].axhline(0, color=INK2, lw=0.8)
     axes[0].set_ylabel("deployed RMSE\nvs τ=0 (%)")
-    axes[1].set_ylabel("harmful swaps (%)")
+    axes[1].set_ylabel("harmful swaps\n(count, of 52)")
     axes[1].set_xticks(x, [POLICY_LABEL[p] for p in pols])
     for ax in axes:
         ax.grid(axis="x", visible=False)
@@ -213,6 +187,18 @@ def numbers_tex(results: dict, params: dict) -> str:
             s = pd.read_parquet(f)
             vals[f"{d}/hours"] = f"{len(s):,}".replace(",", "{,}")
             vals[f"{d}/missing_pct"] = f"{100 * s['is_missing'].mean():.1f}\\%"
+    hyp = ROOT / "reports/study/hypotheses.json"
+    if hyp.exists():
+        ev = json.loads(hyp.read_text())
+        for h, c in ev["summary"].items():
+            vals[f"{h}/holds"], vals[f"{h}/cells"] = str(c["holds"]), str(c["cells"])
+    for d, res in results.items():  # exploratory: best single model kept all year
+        st = res["static_rmse"]
+        best = min(st, key=st.get)
+        vals[f"{d}/static_best"] = best.replace("_", r"\_")
+        vals[f"{d}/static_best_rmse"] = _fmt(st[best])
+        rmses = [r["deployed_rmse"] for r in res["results"] if r["window"] == 30]
+        vals[f"{d}/spread_pct"] = f"{100 * (max(rmses) / min(rmses) - 1):.1f}\\%"
     log = subprocess.run(["git", "log", "--format=%h", "--", "docs/study-protocol.md"],
                          cwd=ROOT, capture_output=True, text=True).stdout.split()  # fmt: skip
     vals["protocol_commit"] = log[-1] if log else "unknown"  # first version (pre-registration)
@@ -232,7 +218,6 @@ def main() -> None:
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     _style()
     primary = {k: results[k] for k in PRIMARY if k in results}
-    fig_deployed_rmse(primary, study["windows"])
     fig_swaps(primary, study["windows"])
     fig_timeline(primary, max(study["windows"]))
     fig_cities(results, max(study["windows"]))

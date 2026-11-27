@@ -155,6 +155,7 @@ def run(replay: str, params: dict | None = None) -> dict:
             "diff_vs_tau0_ci": ci(boot[k] - boot[ref0]),
             "dm_p_vs_tau0": dm_test(d0)[1] if r.policy != "tau0" else None,
             "diff_vs_never_ci": ci(boot[k] - boot[refn]),
+            "diff_vs_tau2_ci": ci(boot[k] - boot[f"tau2@V{r.window}"]),  # needed for H2
             "dm_p_vs_never": dm_test(dn)[1] if r.policy != "never" else None,
             "champions": r.champions, "events": r.events,
         })  # fmt: skip

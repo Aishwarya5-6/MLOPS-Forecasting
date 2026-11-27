@@ -111,10 +111,26 @@ stages:
         - reports/study/${key}/summary.csv:
             cache: false
 
+  study_hypotheses:
+    cmd: python -m src.study.hypotheses
+    deps:
+      - reports/study/cams/results.json
+      - reports/study/station/results.json
+      - reports/study/station_nolstm/results.json
+      - reports/study/station_delhi/results.json
+      - reports/study/station_bengaluru/results.json
+      - reports/study/station_chennai/results.json
+      - src/study/hypotheses.py
+    params:
+      - study.windows
+    outs:
+      - reports/study/hypotheses.json:
+          cache: false
+
   study_figures:
     cmd: python -m src.study.figures
     deps:
-      - reports/study
+      - reports/study/hypotheses.json
       - src/study/figures.py
     params:
       - study.windows
