@@ -29,3 +29,28 @@ forecast:
   fold_test_hours: 720     # each fold is scored on a 30-day test window...
   fold_step_hours: 1752    # ...and folds start 73 days apart, so 5 folds cover a full year of seasons
   origin_every_hours: 24   # inside a test window, forecast the next 24 h every day at midnight
+
+# Promotion-policy study (paper). Protocol: docs/study-protocol.md. Fixed before results.
+study:
+  datasets:
+    cams: data/processed/pm25_hourly.parquet
+    station: data/processed/station_pm25_hourly.parquet
+  replay_days: 365          # replay window = last 365 days of each dataset
+  max_window_days: 30       # cache starts this many days before the replay (longest validation window)
+  refit_every_days: 30      # every candidate is refit on all data before the refit time
+  decide_every_days: 7      # one promotion decision a week, then a 7-day deployment week
+  n_decisions: 52
+  candidates:               # name -> model type + config (+ overrides), built with train.build_model
+    snaive: {model: seasonal_naive, config: configs/seasonal_naive.yaml}
+    sarima: {model: sarima, config: configs/sarima.yaml}
+    xgb: {model: xgb, config: configs/xgb.yaml, set: {log_target: true}}
+    xgb_tuned: {model: xgb, config: configs/xgb_tuned.yaml}
+    lstm: {model: lstm, config: configs/lstm.yaml, set: {num_layers: 2}}
+  derived:                  # equal-weight means of cached candidates (same as EnsembleModel)
+    ensemble: [xgb_tuned, sarima]
+  thresholds: [0.0, 0.01, 0.02, 0.05, 0.10]
+  windows: [7, 14, 30]
+  dm_alpha: 0.05
+  min_valid_fraction: 0.5   # skip a decision if < 50% of validation hours have actuals
+  init_window_days: 30      # initial champion = best on the 30 origins before the replay
+  bootstrap_n: 2000
