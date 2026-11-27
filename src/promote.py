@@ -309,7 +309,7 @@ def cmd_rollback(to_version: str | None = None) -> str:
     client.set_model_version_tag(MODEL_NAME, current, "rolled_back_to", target)
     client.set_model_version_tag(MODEL_NAME, target, "restored_on", now)
     client.set_model_version_tag(MODEL_NAME, target, "restored_from", current)
-    print(f"@champion -> v{target} (rolled back from v{current})")
+    print(f"@champion -> v{target} (was v{current})")
     return target
 
 
